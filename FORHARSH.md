@@ -325,6 +325,101 @@ having it, because the next person to read the file will believe it.
 
 ---
 
+## Real data, and what it cost me to find out
+
+### The estimates were wrong, and the tool said so out loud
+
+For three rounds this thing carried prices I had estimated by hand. They looked reasonable. Several
+were badly wrong.
+
+Wanstead: estimated £700k, actual median house price **£935k** across 143 sales. Shenfield:
+estimated £675k, actual **£872k**. Those aren't rounding errors — they're the difference between an
+area being inside a £750k budget and not. On my guesses, Wanstead ranked as the best all-rounder and
+got recommended as such. On the real numbers it doesn't qualify at all.
+
+The data is HM Land Registry **Price Paid Data**: every residential sale in England and Wales,
+1,184,740 transactions for 2025–26, free, open, and recording what people *actually paid* rather
+than what they hoped for. It took about ten minutes to wire in and it invalidated a recommendation
+I'd given twice.
+
+**Lesson: an estimate that never gets checked will quietly become a fact.** Mine sat in the codebase
+looking like data, formatted like data, feeding a ranking like data — for three rounds. Nothing
+about how they were *displayed* said "these are vibes." If you ship a placeholder, label it as one
+loudly enough that future-you can't mistake it. Note what happened to the rent figures in the same
+commit: they stayed estimates, because Land Registry publishes sales and not lettings — so now they
+say "(estimate)" on the face of every card. That label is doing real work.
+
+### Asking the data instead of my memory
+
+Areas had to be mapped to postcode zones, and E11 is a trap: it covers both Wanstead and Leytonstone,
+which are different places at different prices. My first instinct was to hand-assign postcode sectors
+from memory. That would have been confident and unverifiable — the worst combination.
+
+Instead: the Land Registry rows carry a **District** column, so E11 splits on the borough boundary
+(Redbridge = Wanstead, Waltham Forest = Leytonstone) with no guessing at all. And where sectors were
+genuinely needed, I looked up streets I *knew* — "does The Ridgeway land in E4 6 or E4 9?" — and let
+the data answer. It came back clean: E4 9 is Highams Park, E4 6/7/8 is Chingford, CM15 8 is Shenfield.
+
+**Lesson: when you have a dataset, interrogate it rather than your recollection.** The check cost one
+query and turned a set of assertions into a set of findings. Where the data refused to give a clean
+answer — E17's sectors genuinely interleave Walthamstow and Wood Street — the right move was to merge
+those zones and *say so on the card*, not to force a split I couldn't defend.
+
+### The chart where the colour turned out to be doing nothing
+
+The price-against-commute scatter was going to colour each dot green/amber/red by whether it cleared
+the 45-minute limit. Before shipping it I ran the palette through a contrast validator, and it failed:
+red against amber is ΔE 3.9 under deuteranopia — effectively the same colour to a red-green colourblind
+reader — and only 12.5 even with full colour vision.
+
+The fix wasn't a better red. It was noticing that **commute time is already the x-axis**, so colouring
+by a category derived from commute time was pure redundancy. The colour was decorative and I hadn't
+noticed because it looked fine to me. So the dots became one quiet neutral, and the single accent got
+spent on the thing that actually carries information: the **efficient frontier** — the areas where
+nothing else is both cheaper and quicker.
+
+**Two lessons, and the second is the one worth keeping:**
+
+1. **Run the check, don't eyeball it.** I would have shipped that palette. It looked fine on my screen,
+   which is exactly the problem — "looks fine to me" is not a colour-accessibility test.
+2. **A failing check is often pointing at a design problem, not a colour problem.** The honest question
+   wasn't "which red passes?" but "what is this colour telling anyone that the position doesn't?" The
+   answer was nothing, and the chart got better for losing it.
+
+### Knowing which door to knock on
+
+The ask was "scrape Rightmove or Zoopla." That was the wrong tool for the job on three separate counts,
+and it's worth separating them because only one is about rules:
+
+- **Contractual:** both explicitly forbid automated collection.
+- **Practical:** both run bot protection; a scraper is a maintenance liability that breaks on their
+  schedule, not yours.
+- **Substantive — and this is the real one:** asking prices are an *opening bid*. Land Registry records
+  what changed hands. For "can we afford this area," sold prices are simply better evidence.
+
+**Lesson: when a request names a method, solve for the goal.** "Scrape a portal" was a guess at how to
+get property data; the actual goal was to compare real housing costs against the commute. Once you
+separate those, an open, free, complete, legally unambiguous dataset is sitting right there. The
+version that respects the constraint is also the version that's more accurate — that happens more often
+than people expect, and it's worth looking for before assuming a trade-off exists.
+
+### And a note on where recommendations come from
+
+Somewhere in this, the question came up: what are people on Reddit actually saying? Reddit turned out to
+be entirely unreachable from this environment, so what I could get was press and editorial coverage
+instead — and I said so rather than letting search results stand in for community consensus they weren't.
+
+It still earned its keep. It surfaced **Poplar**, which the rail geography alone hadn't flagged, and
+which lands at 24 minutes and £602k — on the efficient frontier. It also surfaced a whole cluster of
+inner-east-London areas (Bethnal Green, London Fields, Clapton, Hackney Wick, Leyton, Tottenham Hale)
+that a model weighted toward parking had systematically skipped.
+
+**Lesson: an optimiser only searches where you point it.** Mine was pointed at rail geography and
+parking, so it kept finding suburbs — correctly, given its inputs, and incompletely. The fix for a
+blind spot is rarely a better algorithm; it's a different source of candidates.
+
+---
+
 ## Things I chose not to build, and why
 
 Naming what you deliberately left out is part of the deliverable. It's the difference between a
@@ -332,6 +427,7 @@ gap and an oversight.
 
 - **No slippy map.** See above — the CSP forbids tile servers, and the hand-drawn map turned out
   to be the better answer anyway.
+- **No live listings.** Sold prices, not what is on the market today. See above.
 - **No live TfL API.** Journey times come from scheduled services and typical peak frequencies.
   A live API would make the numbers look more authoritative without making them more true — you'd
   be getting today's disruption baked into a decision about the next five years. What the page

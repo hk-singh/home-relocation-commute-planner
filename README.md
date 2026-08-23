@@ -7,16 +7,31 @@ Open `index.html` in any browser. No build, no server, no dependencies.
 
 ## What it does
 
-Scores 57 London areas against four constraints at once:
+Scores 65 London areas against four constraints at once:
 
 - **Door-to-door commute** under 45 minutes, modelled properly — walk to the station, platform
   wait, time on the train, interchange penalty, and the walk from the arrival station to the desk.
 - **Parking** — how realistic it is to keep a car there.
 - **Walkability** and **green space** — the neighbourhood you'd actually live in.
 
-Four views: a ranked list with each commute drawn on a shared 60-minute scale, a side-by-side
+Five views: a ranked list with each commute drawn on a shared 60-minute scale, a side-by-side
 shortlist, a polar time map (bearing = compass direction, radius = minutes), and a written
-method with the assumptions and caveats spelled out.
+method with the assumptions and caveats spelled out, plus a price-against-commute chart that picks
+out the **efficient frontier** — the areas nothing else beats on both cost and journey time.
+
+## Prices are real
+
+Every price comes from **HM Land Registry Price Paid Data** for 2025–26: 1,184,740 recorded
+residential sales, filtered to these postcode zones and to standard full-value transactions, under
+the Open Government Licence. These are prices actually paid, not asking prices. Sample sizes are
+shown against every figure.
+
+This is deliberately *not* scraped from Rightmove or Zoopla. Both prohibit automated collection in
+their terms, both run bot protection that breaks scrapers quickly, and sold prices are better
+evidence than asking prices anyway. The trade-off is that there are no live listings here — run
+that search yourself and bring addresses back to check against the commute.
+
+Rent figures remain estimates and are labelled as such; Land Registry publishes sales, not lettings.
 
 Everything is adjustable — the time ceiling, how far you'll walk to a station, the interchange
 penalty, the rent cap, and how much each of the four priorities counts. Settings and shortlist

@@ -202,6 +202,28 @@ tbody th{font-family:"Barlow Semi Condensed",Arial,sans-serif; text-transform:up
 td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500}
 .best{color:var(--good); font-weight:600}
 
+.soldstrip{padding:10px 15px 11px; border-top:1px solid var(--line-soft); background:var(--surface)}
+.soldhead{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:baseline; justify-content:space-between; margin-bottom:8px}
+.soldhead .src{font-family:"Barlow Semi Condensed",Arial,sans-serif; text-transform:uppercase; letter-spacing:.08em; font-size:10.5px; font-weight:600; color:var(--ink-4)}
+.soldhead .hero{font-family:"IBM Plex Mono",monospace; font-size:19px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums}
+.soldhead .hero small{font-size:11px; font-weight:500; color:var(--ink-3); margin-left:5px; font-family:"Barlow",sans-serif}
+.ptypes{display:grid; grid-template-columns:repeat(auto-fit,minmax(96px,1fr)); gap:6px}
+.ptype{background:var(--surface-2); border:1px solid var(--line-soft); border-radius:3px; padding:6px 8px}
+.ptype .t{font-family:"Barlow Semi Condensed",Arial,sans-serif; font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-4); font-weight:600}
+.ptype .m{font-family:"IBM Plex Mono",monospace; font-size:13.5px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums}
+.ptype .n{font-size:10.5px; color:var(--ink-4); font-family:"IBM Plex Mono",monospace}
+.ptype.thin{opacity:.6}
+.pnote{font-size:11.5px; color:var(--ink-4); margin-top:7px; line-height:1.4}
+.chartcard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px}
+.chartcard svg{display:block; width:100%; height:auto}
+.charthead{margin-bottom:6px}
+.charthead h2{font-size:20px; font-weight:700}
+.charthead p{color:var(--ink-3); font-size:13.5px; margin:5px 0 0; max-width:74ch}
+.dot-plain{fill:var(--ink-4); opacity:.5}
+.dot-front{fill:var(--accent)}
+.axis-l{font-family:"IBM Plex Mono",monospace; font-size:10.5px; fill:var(--ink-4)}
+.axis-t{font-family:"Barlow Semi Condensed",sans-serif; font-size:12px; fill:var(--ink-3); letter-spacing:.06em; text-transform:uppercase}
+
 /* ---------- prose ---------- */
 .prose{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:24px 26px; max-width:78ch}
 .prose h2{font-size:23px; font-weight:700; margin-bottom:8px}
@@ -257,6 +279,7 @@ td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
       <button class="tab" role="tab" data-tab="explore" aria-selected="true">Explore<span class="n" id="tab-n-explore"></span></button>
       <button class="tab" role="tab" data-tab="compare" aria-selected="false">Shortlist<span class="n" id="tab-n-short"></span></button>
       <button class="tab" role="tab" data-tab="map" aria-selected="false">Time map</button>
+      <button class="tab" role="tab" data-tab="prices" aria-selected="false">Prices</button>
       <button class="tab" role="tab" data-tab="method" aria-selected="false">How this works</button>
     </div>
   </div>
@@ -282,7 +305,7 @@ td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
               <option value="parking">Easiest parking</option>
               <option value="walk">Most walkable</option>
               <option value="green">Most green space</option>
-              <option value="rent">Cheapest rent</option>
+              <option value="price">Cheapest to buy</option>
             </select>
           </div>
         </div>
@@ -293,6 +316,7 @@ td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
 
   <div id="panel-compare" hidden style="margin-top:22px"></div>
   <div id="panel-map" hidden style="margin-top:22px"></div>
+  <div id="panel-prices" hidden style="margin-top:22px"></div>
   <div id="panel-method" hidden style="margin-top:22px"></div>
 </div>
 
@@ -319,7 +343,8 @@ const LINES = {
   c2c:       { name:"c2c",               c:"#0B7EA8" },
   southeast: { name:"Southeastern",      c:"#3A6FB0" },
   greatanglia:{ name:"Greater Anglia fast", c:"#1F4E79" },
-  hs1:       { name:"Southeastern High Speed", c:"#3C3B6E" }
+  hs1:       { name:"Southeastern High Speed", c:"#3C3B6E" },
+  mildmay:   { name:"Mildmay line",      c:"#0077AD" }
 };
 
 /* Where you get off, and how long the final walk to Portsoken House is.
@@ -372,7 +397,7 @@ const AREAS = [
 
 {id:"leytonstone", name:"Leytonstone", loc:"E11 · Waltham Forest", stn:"Leytonstone", legs:[{line:"central", ride:19}], term:"liverpool", head:3, ch:0, brg:32, lat:51.5683, lon:0.0083, corr:"central-epping",
  parking:3, walk:4, green:4, amen:4, rent:1700, buy:575000,
- vibe:"Francis Road and Church Lane have quietly become one of east London's better café strips, with Hollow Ponds and Wanstead Flats a short walk away.",
+ vibe:"Church Lane and the streets around Hollow Ponds have quietly become one of east London's better pockets, with Wanstead Flats a short walk away and Leyton's Francis Road one stop down the line.",
  watch:"Controlled parking across much of it, and the streets nearest the station are tight.",
  park:"Wanstead Flats, Hollow Ponds, Epping Forest"},
 
@@ -698,12 +723,100 @@ const AREAS = [
  parking:5, walk:3, green:3, amen:3, rent:1400, buy:430000,
  vibe:"Family houses with drives and garages at Essex prices but inside a London borough, with a retail park for the weekly shop.",
  watch:"One minute over as scored, and the DLR terminus means a seat but also a ten-minute headway. Car-dependent for anything beyond the retail park.",
- park:"Beckton District Park, New Beckton Park, East Ham Nature Reserve"}
+ park:"Beckton District Park, New Beckton Park, East Ham Nature Reserve"},
+
+/* --- Inner east London: where the 25-35 crowd has actually been moving ---
+   Added after checking what people are recommending rather than only what the
+   rail geography suggested. Most of these fail the parking test — that is the
+   trade, and it is stated plainly on each card. */
+{id:"bethnalgreen", name:"Bethnal Green", loc:"E2 · Tower Hamlets", stn:"Bethnal Green", legs:[{line:"central", ride:4}], term:"liverpool", head:3, ch:0, brg:52, lat:51.5270, lon:-0.0549, corr:"central-epping",
+ parking:1, walk:5, green:4, amen:5, rent:2100, buy:895000,
+ vibe:"Twenty-three minutes door to door and one of the shortest commutes on this list. Columbia Road, Broadway Market and Victoria Park are all walkable, and the Central line gets you home in four minutes.",
+ watch:"Parking is about as hard as London gets — Tower Hamlets permits, dense Victorian and estate housing, almost nothing off-street.",
+ park:"Victoria Park, Weavers Fields, Haggerston Park"},
+
+{id:"londonfields", name:"London Fields", loc:"E8 · Hackney", stn:"London Fields", legs:[{line:"weaver", ride:8}], term:"liverpool", head:8, ch:0, brg:20, lat:51.5411, lon:-0.0574, corr:"weaver-enfield",
+ parking:1, walk:5, green:5, amen:5, rent:2300, buy:1150000,
+ vibe:"The one everybody names. Broadway Market, the lido, the park, and a 29-minute commute. If you were optimising purely for how good the weekends are, this wins.",
+ watch:"Hackney parking and Hackney prices — a terraced house here has a median around £960k. Both of your constraints point away from it.",
+ park:"London Fields, Victoria Park, Hackney Downs"},
+
+{id:"dalston", name:"Dalston", loc:"E8 · Hackney", stn:"Dalston Junction", legs:[{line:"windrush", ride:10},{line:"district", ride:2}], term:"aldgateE", head:6, ch:1, brg:358, lat:51.5460, lon:-0.0750, corr:"windrush-north",
+ parking:1, walk:5, green:4, amen:5, rent:2200, buy:1150000,
+ vibe:"Kingsland Road's restaurants and bars, Ridley Road market, and two Overground lines. Perennially near the top of anyone's list in their late twenties.",
+ watch:"Same problem as London Fields: brutal for parking, and you pay a premium for the nightlife whether or not you use it.",
+ park:"Dalston Eastern Curve Garden, London Fields, Clissold Park"},
+
+{id:"clapton", name:"Clapton", loc:"E5 · Hackney", stn:"Clapton", legs:[{line:"weaver", ride:10}], term:"liverpool", head:8, ch:0, brg:12, lat:51.5613, lon:-0.0556, corr:"weaver-chingford",
+ parking:2, walk:5, green:5, amen:4, rent:2000, buy:1228750,
+ vibe:"Hackney's quieter, greener end — the Lea marshes and Springfield Park on one side, Chatsworth Road market on the other, and 31 minutes to the office.",
+ watch:"Cheaper than Stoke Newington in feel but not in price, and parking is still Hackney parking.",
+ park:"Springfield Park, Hackney Marshes, Millfields Park"},
+
+{id:"hackneywick", name:"Hackney Wick", loc:"E9 · Hackney", stn:"Hackney Wick", legs:[{line:"mildmay", ride:4},{line:"elizabeth", ride:7}], term:"liverpool", head:8, ch:1, brg:38, lat:51.5434, lon:-0.0225, corr:"mildmay",
+ parking:2, walk:4, green:5, amen:4, rent:2000, buy:995000,
+ vibe:"Warehouse conversions, canalside breweries and the Olympic Park over the bridge. The most distinctive place on this list by some distance.",
+ watch:"Needs a change at Stratford, parking is poor, and it is still more studios-and-scaffolding than settled neighbourhood.",
+ park:"Queen Elizabeth Olympic Park, Victoria Park, Hackney Marshes"},
+
+{id:"leyton", name:"Leyton", loc:"E10 · Waltham Forest", stn:"Leyton", legs:[{line:"central", ride:16}], term:"liverpool", head:3, ch:0, brg:40, lat:51.5566, lon:-0.0053, corr:"central-epping",
+ parking:3, walk:5, green:4, amen:4, rent:1750, buy:705000,
+ vibe:"Francis Road is the strip everyone actually means when they say Leytonstone is up-and-coming — bakery, bookshop, wine bar, all on one street. Thirty-five minutes, Central line, and cheaper than Walthamstow.",
+ watch:"Controlled parking over much of it and the housing is mostly two-up-two-down terraces without off-street space.",
+ park:"Coronation Gardens, Hackney Marshes, Wanstead Flats"},
+
+{id:"poplar", name:"Poplar", loc:"E14 · Tower Hamlets", stn:"Poplar", legs:[{line:"dlr", ride:9}], term:"towergw", head:5, ch:0, brg:100, lat:51.5077, lon:-0.0173, corr:"dlr-se",
+ parking:2, walk:4, green:3, amen:4, rent:1900, buy:602000,
+ vibe:"Twenty-four minutes door to door — among the fastest here — for a median house price around £600k, which is remarkable this close in. Canary Wharf's amenities are a short walk and it has been picked out as one of the areas people are moving to now.",
+ watch:"Mostly flats and new build, with estate housing between them; quality varies a lot street to street. Parking is limited and often a paid space in a block.",
+ park:"Langdon Park, Bartlett Park, Poplar Recreation Ground"},
+
+{id:"tottenhamhale", name:"Tottenham Hale", loc:"N17 · Haringey", stn:"Tottenham Hale", legs:[{line:"weaver", ride:17}], term:"liverpool", head:8, ch:0, brg:356, lat:51.5882, lon:-0.0600, corr:"weaver-leavalley",
+ parking:3, walk:4, green:5, amen:4, rent:1700, buy:550000,
+ vibe:"A large regeneration with thousands of new homes, the Victoria line as a second route, and Walthamstow Wetlands and the Lea Valley on the doorstep. Median house around £550k, 38 minutes to the office.",
+ watch:"The new-build blocks are much better than the older stock around them, and the gyratory end of it is not somewhere you would choose to walk.",
+ park:"Walthamstow Wetlands, Lea Valley Park, Down Lane Park"}
 ];
 </script>
 
 <script>
 "use strict";
+
+
+/* ============================================================================
+   2b. REAL SOLD PRICES
+   HM Land Registry Price Paid Data, every residential sale in England and Wales
+   for 2025 and 2026 to date — 1,184,740 transactions, filtered to the postcode
+   zones below and to category-A (standard, full-value) sales only. Open
+   Government Licence v3. These are prices people actually PAID, not asking
+   prices, which is why they are worth more than anything a portal would show.
+   med/p25/p75 are the median and quartiles; n is the number of sales behind it.
+   ========================================================================== */
+const PRICES = {"wanstead":{"detached":{"n":11,"med":1675000,"p25":1200000,"p75":2350000},"semi":{"n":52,"med":1032500,"p25":893000,"p75":1315000},"terraced":{"n":80,"med":875000,"p25":697500,"p75":1000000},"flat":{"n":140,"med":390000,"p25":325000,"p75":465000},"zone":"E11 (Redbridge)","all":{"n":283,"med":610000,"p25":390000,"p75":937000},"house":{"n":143,"med":935000,"p25":755000,"p75":1250000}},"leytonstone":{"semi":{"n":18,"med":824335,"p25":712500,"p75":990000},"terraced":{"n":235,"med":736250,"p25":620000,"p75":850000},"flat":{"n":216,"med":395000,"p25":325000,"p75":456000},"zone":"E11 (Waltham Forest)","all":{"n":471,"med":549000,"p25":400000,"p75":751000},"house":{"n":255,"med":740000,"p25":621500,"p75":865000}},"snaresbrook":{"detached":{"n":19,"med":1075000,"p25":768440,"p75":1580000},"semi":{"n":53,"med":910000,"p25":742000,"p75":1095000},"terraced":{"n":102,"med":715000,"p25":627500,"p75":845000},"flat":{"n":161,"med":387500,"p25":315000,"p75":450000},"zone":"E18","all":{"n":335,"med":550000,"p25":387500,"p75":791000},"house":{"n":174,"med":780000,"p25":650000,"p75":975000}},"southwoodford":{"detached":{"n":19,"med":1075000,"p25":768440,"p75":1580000},"semi":{"n":53,"med":910000,"p25":742000,"p75":1095000},"terraced":{"n":102,"med":715000,"p25":627500,"p75":845000},"flat":{"n":161,"med":387500,"p25":315000,"p75":450000},"zone":"E18","all":{"n":335,"med":550000,"p25":387500,"p75":791000},"house":{"n":174,"med":780000,"p25":650000,"p75":975000}},"woodford":{"detached":{"n":52,"med":1148000,"p25":830000,"p75":1475000},"semi":{"n":137,"med":778000,"p25":640000,"p75":905000},"terraced":{"n":203,"med":602500,"p25":501000,"p75":725000},"flat":{"n":143,"med":340000,"p25":291500,"p75":403000},"zone":"IG8","all":{"n":535,"med":600000,"p25":416000,"p75":800000},"house":{"n":392,"med":683000,"p25":565000,"p75":867000}},"gantshill":{"semi":{"n":19,"med":620000,"p25":560000,"p75":800000},"terraced":{"n":101,"med":562000,"p25":495000,"p75":610000},"flat":{"n":55,"med":262500,"p25":218000,"p75":300000},"zone":"IG2","all":{"n":178,"med":508500,"p25":295000,"p75":600000},"house":{"n":123,"med":570000,"p25":500000,"p75":620000}},"redbridge":{"semi":{"n":13,"med":647250,"p25":595000,"p75":700000},"terraced":{"n":41,"med":601000,"p25":555500,"p75":677500},"flat":{"n":16,"med":114000,"p25":90000,"p75":220000},"zone":"IG4","all":{"n":71,"med":590000,"p25":360000,"p75":660000},"house":{"n":55,"med":605000,"p25":555500,"p75":692000}},"buckhursthill":{"detached":{"n":40,"med":1012500,"p25":865000,"p75":1173500},"semi":{"n":60,"med":740000,"p25":600000,"p75":925000},"terraced":{"n":71,"med":650000,"p25":565000,"p75":750000},"flat":{"n":82,"med":380000,"p25":317000,"p75":450000},"zone":"IG9","all":{"n":253,"med":620000,"p25":430000,"p75":800000},"house":{"n":171,"med":735000,"p25":600000,"p75":925000}},"walthamstow":{"semi":{"n":31,"med":875000,"p25":749844,"p75":1155000},"terraced":{"n":239,"med":735000,"p25":625000,"p75":900000},"flat":{"n":254,"med":426000,"p25":360000,"p75":502000},"zone":"E17 3/8/9","all":{"n":526,"med":562350,"p25":425000,"p75":750000},"house":{"n":272,"med":740000,"p25":635000,"p75":910500}},"woodstreet":{"semi":{"n":31,"med":875000,"p25":749844,"p75":1155000},"terraced":{"n":239,"med":735000,"p25":625000,"p75":900000},"flat":{"n":254,"med":426000,"p25":360000,"p75":502000},"zone":"E17 3/8/9","all":{"n":526,"med":562350,"p25":425000,"p75":750000},"house":{"n":272,"med":740000,"p25":635000,"p75":910500}},"stjames":{"semi":{"n":7,"med":695000,"p25":605000,"p75":795000},"terraced":{"n":221,"med":740000,"p25":636000,"p75":862000},"flat":{"n":246,"med":431000,"p25":370000,"p75":520000},"zone":"E17 6/7","all":{"n":475,"med":545000,"p25":413000,"p75":736000},"house":{"n":229,"med":738000,"p25":636000,"p75":860000}},"highamspark":{"detached":{"n":6,"med":800000,"p25":662000,"p75":900000},"semi":{"n":44,"med":750000,"p25":637500,"p75":920000},"terraced":{"n":129,"med":638500,"p25":546000,"p75":727500},"flat":{"n":77,"med":335000,"p25":300000,"p75":400000},"zone":"E4 9","all":{"n":256,"med":575000,"p25":402000,"p75":727500},"house":{"n":179,"med":667800,"p25":560000,"p75":775000}},"chingford":{"detached":{"n":25,"med":840000,"p25":650000,"p75":995000},"semi":{"n":182,"med":633750,"p25":545000,"p75":738000},"terraced":{"n":232,"med":520000,"p25":470000,"p75":590000},"flat":{"n":153,"med":337500,"p25":285000,"p75":400000},"zone":"E4 6/7/8","all":{"n":592,"med":526250,"p25":410000,"p75":640000},"house":{"n":439,"med":570000,"p25":490000,"p75":680000}},"stokenewington":{"semi":{"n":12,"med":1288500,"p25":1010000,"p75":1551250},"terraced":{"n":135,"med":1275000,"p25":875000,"p75":1660000},"flat":{"n":411,"med":515000,"p25":425250,"p75":653401},"zone":"N16","all":{"n":561,"med":585000,"p25":452500,"p75":885250},"house":{"n":150,"med":1276000,"p25":875000,"p75":1625000}},"bushhill":{"detached":{"n":10,"med":776500,"p25":650000,"p75":1075000},"semi":{"n":108,"med":599999,"p25":510000,"p75":660000},"terraced":{"n":275,"med":500000,"p25":455000,"p75":564000},"flat":{"n":158,"med":317500,"p25":250000,"p75":362500},"zone":"EN1","all":{"n":551,"med":480000,"p25":370000,"p75":570000},"house":{"n":393,"med":525000,"p25":465000,"p75":607500}},"upminster":{"detached":{"n":76,"med":766500,"p25":652000,"p75":1060000},"semi":{"n":268,"med":615000,"p25":525000,"p75":745000},"terraced":{"n":88,"med":482750,"p25":447000,"p75":567500},"flat":{"n":60,"med":320000,"p25":285000,"p75":365000},"zone":"RM14","all":{"n":492,"med":578000,"p25":465000,"p75":745000},"house":{"n":432,"med":615000,"p25":500000,"p75":755000}},"barking":{"semi":{"n":30,"med":527500,"p25":450000,"p75":625000},"terraced":{"n":201,"med":455995,"p25":390000,"p75":510000},"flat":{"n":208,"med":252000,"p25":200000,"p75":291000},"zone":"IG11","all":{"n":439,"med":362500,"p25":250000,"p75":472995},"house":{"n":231,"med":465000,"p25":390000,"p75":530000}},"dagenhamheathway":{"semi":{"n":20,"med":442500,"p25":390000,"p75":510000},"terraced":{"n":245,"med":385000,"p25":360000,"p75":407000},"flat":{"n":36,"med":215000,"p25":200000,"p75":245000},"zone":"RM9","all":{"n":303,"med":380000,"p25":350000,"p75":407000},"house":{"n":267,"med":385000,"p25":360000,"p75":410000}},"eastham":{"semi":{"n":5,"med":510000,"p25":450000,"p75":621000},"terraced":{"n":225,"med":450000,"p25":412500,"p75":500000},"flat":{"n":42,"med":280000,"p25":232500,"p75":320000},"zone":"E6 1/2/3","all":{"n":272,"med":435000,"p25":385000,"p75":495000},"house":{"n":230,"med":450000,"p25":415000,"p75":500000}},"gallionsreach":{"semi":{"n":15,"med":450000,"p25":406500,"p75":625000},"terraced":{"n":82,"med":430000,"p25":400000,"p75":465000},"flat":{"n":36,"med":265000,"p25":225000,"p75":295000},"zone":"E6 4/5/6/7","all":{"n":137,"med":410000,"p25":300000,"p75":460000},"house":{"n":101,"med":433000,"p25":400000,"p75":475000}},"beckton":{"semi":{"n":15,"med":450000,"p25":406500,"p75":625000},"terraced":{"n":82,"med":430000,"p25":400000,"p75":465000},"flat":{"n":36,"med":265000,"p25":225000,"p75":295000},"zone":"E6 4/5/6/7","all":{"n":137,"med":410000,"p25":300000,"p75":460000},"house":{"n":101,"med":433000,"p25":400000,"p75":475000}},"mileend":{"terraced":{"n":104,"med":877500,"p25":750000,"p75":1075000},"flat":{"n":629,"med":427500,"p25":343000,"p75":520000},"zone":"E3","all":{"n":738,"med":450000,"p25":360000,"p75":591000},"house":{"n":109,"med":875000,"p25":750000,"p75":1075000}},"bowroad":{"terraced":{"n":104,"med":877500,"p25":750000,"p75":1075000},"flat":{"n":629,"med":427500,"p25":343000,"p75":520000},"zone":"E3","all":{"n":738,"med":450000,"p25":360000,"p75":591000},"house":{"n":109,"med":875000,"p25":750000,"p75":1075000}},"stratford":{"semi":{"n":10,"med":498542,"p25":480000,"p75":540000},"terraced":{"n":213,"med":542000,"p25":470000,"p75":630000},"flat":{"n":325,"med":400000,"p25":318000,"p75":530000},"zone":"E15/E20","all":{"n":548,"med":467500,"p25":362500,"p75":600000},"house":{"n":223,"med":540000,"p25":470000,"p75":630000}},"forestgate":{"semi":{"n":9,"med":950000,"p25":665000,"p75":1196000},"terraced":{"n":213,"med":590000,"p25":510000,"p75":700000},"flat":{"n":83,"med":340000,"p25":260000,"p75":400000},"zone":"E7","all":{"n":306,"med":531500,"p25":400000,"p75":665000},"house":{"n":223,"med":590000,"p25":510000,"p75":735000}},"manorpark":{"semi":{"n":13,"med":850000,"p25":750000,"p75":1075000},"terraced":{"n":141,"med":500000,"p25":445000,"p75":605000},"flat":{"n":43,"med":290000,"p25":255000,"p75":325000},"zone":"E12","all":{"n":199,"med":475000,"p25":350000,"p75":582500},"house":{"n":156,"med":511250,"p25":450000,"p75":650000}},"ilford":{"semi":{"n":31,"med":725000,"p25":585000,"p75":790000},"terraced":{"n":195,"med":485000,"p25":430000,"p75":585000},"flat":{"n":85,"med":235000,"p25":180000,"p75":270000},"zone":"IG1","all":{"n":315,"med":450000,"p25":300000,"p75":578000},"house":{"n":230,"med":515000,"p25":435000,"p75":632000}},"goodmayes":{"detached":{"n":7,"med":900000,"p25":667500,"p75":1045000},"semi":{"n":27,"med":612500,"p25":535000,"p75":735000},"terraced":{"n":159,"med":530000,"p25":479000,"p75":580000},"flat":{"n":67,"med":365000,"p25":251500,"p75":385000},"zone":"IG3","all":{"n":260,"med":501000,"p25":384000,"p75":575000},"house":{"n":193,"med":535000,"p25":485000,"p75":605000}},"chadwellheath":{"detached":{"n":12,"med":492525,"p25":455000,"p75":530000},"semi":{"n":46,"med":465000,"p25":434000,"p75":510000},"terraced":{"n":197,"med":465000,"p25":420000,"p75":506850},"flat":{"n":73,"med":250000,"p25":200000,"p75":268000},"zone":"RM6","all":{"n":328,"med":441250,"p25":322500,"p75":498000},"house":{"n":255,"med":465000,"p25":422500,"p75":510000}},"romford":{"detached":{"n":29,"med":700000,"p25":600000,"p75":783000},"semi":{"n":160,"med":552000,"p25":485000,"p75":670000},"terraced":{"n":84,"med":462500,"p25":420000,"p75":520000},"flat":{"n":137,"med":230000,"p25":175000,"p75":268000},"zone":"RM1","all":{"n":410,"med":457250,"p25":268000,"p75":565000},"house":{"n":273,"med":530000,"p25":457500,"p75":630000}},"gideapark":{"detached":{"n":36,"med":918750,"p25":780000,"p75":1050000},"semi":{"n":95,"med":620000,"p25":524000,"p75":750000},"terraced":{"n":64,"med":545000,"p25":500000,"p75":635000},"flat":{"n":86,"med":297500,"p25":268000,"p75":330000},"zone":"RM2","all":{"n":281,"med":525000,"p25":340000,"p75":698000},"house":{"n":195,"med":613750,"p25":520000,"p75":775000}},"haroldwood":{"detached":{"n":37,"med":625000,"p25":479000,"p75":770000},"semi":{"n":176,"med":460000,"p25":415000,"p75":538000},"terraced":{"n":261,"med":408000,"p25":372000,"p75":435000},"flat":{"n":123,"med":250000,"p25":202000,"p75":292000},"zone":"RM3","all":{"n":597,"med":410000,"p25":344000,"p75":470000},"house":{"n":474,"med":425500,"p25":385000,"p75":482000}},"brentwood":{"detached":{"n":77,"med":800000,"p25":690000,"p75":1042500},"semi":{"n":95,"med":590000,"p25":475000,"p75":710000},"terraced":{"n":123,"med":440000,"p25":402500,"p75":490000},"flat":{"n":197,"med":271000,"p25":225000,"p75":325000},"zone":"CM14","all":{"n":492,"med":425000,"p25":300000,"p75":625000},"house":{"n":295,"med":550000,"p25":435000,"p75":735000}},"shenfield":{"detached":{"n":63,"med":950000,"p25":810000,"p75":1308000},"semi":{"n":26,"med":683750,"p25":595000,"p75":845000},"terraced":{"n":9,"med":625000,"p25":450000,"p75":890000},"flat":{"n":37,"med":350000,"p25":255000,"p75":460000},"zone":"CM15 8","all":{"n":135,"med":725000,"p25":475000,"p75":975000},"house":{"n":98,"med":872500,"p25":670000,"p75":1120000}},"woolwich":{"terraced":{"n":43,"med":455000,"p25":415000,"p75":569000},"flat":{"n":311,"med":410000,"p25":290000,"p75":488800},"zone":"SE18 4/5/6","all":{"n":357,"med":415000,"p25":300000,"p75":495000},"house":{"n":46,"med":462500,"p25":415000,"p75":608800}},"plumstead":{"detached":{"n":11,"med":660000,"p25":404000,"p75":980000},"semi":{"n":53,"med":500000,"p25":440000,"p75":555000},"terraced":{"n":224,"med":445000,"p25":395000,"p75":510000},"flat":{"n":86,"med":273500,"p25":250000,"p75":310000},"zone":"SE18 1/2/3/7","all":{"n":374,"med":425000,"p25":347500,"p75":500000},"house":{"n":288,"med":455000,"p25":400000,"p75":531000}},"abbeywood":{"detached":{"n":6,"med":575000,"p25":500000,"p75":640000},"semi":{"n":44,"med":452500,"p25":436500,"p75":525000},"terraced":{"n":169,"med":430000,"p25":400000,"p75":472000},"flat":{"n":39,"med":250000,"p25":210000,"p75":290000},"zone":"SE2","all":{"n":258,"med":425000,"p25":385000,"p75":472000},"house":{"n":219,"med":440000,"p25":407500,"p75":480000}},"greenwich":{"detached":{"n":5,"med":1500000,"p25":1499999,"p75":1650000},"semi":{"n":15,"med":787500,"p25":550000,"p75":1150000},"terraced":{"n":178,"med":810000,"p25":665000,"p75":1030000},"flat":{"n":509,"med":450000,"p25":370000,"p75":545000},"zone":"SE10","all":{"n":707,"med":512625,"p25":395000,"p75":700000},"house":{"n":198,"med":811250,"p25":665000,"p75":1060000}},"lewisham":{"semi":{"n":34,"med":875000,"p25":750000,"p75":1500000},"terraced":{"n":198,"med":748875,"p25":605000,"p75":910000},"flat":{"n":425,"med":368000,"p25":305000,"p75":440000},"zone":"SE13","all":{"n":659,"med":440000,"p25":335000,"p75":688000},"house":{"n":234,"med":767500,"p25":635000,"p75":925000}},"blackheath":{"detached":{"n":31,"med":1400000,"p25":850000,"p75":1700000},"semi":{"n":79,"med":700000,"p25":563000,"p75":1000000},"terraced":{"n":163,"med":700000,"p25":517000,"p75":865000},"flat":{"n":348,"med":456000,"p25":365000,"p75":564000},"zone":"SE3","all":{"n":621,"med":540000,"p25":425000,"p75":750000},"house":{"n":273,"med":725000,"p25":550000,"p75":975000}},"canadawater":{"semi":{"n":12,"med":765000,"p25":640000,"p75":927000},"terraced":{"n":81,"med":725000,"p25":600000,"p75":860000},"flat":{"n":500,"med":435000,"p25":345000,"p75":550000},"zone":"SE16","all":{"n":594,"med":470000,"p25":360000,"p75":600000},"house":{"n":94,"med":727500,"p25":600000,"p75":860000}},"brockley":{"detached":{"n":7,"med":925000,"p25":745000,"p75":1450000},"semi":{"n":29,"med":945000,"p25":715000,"p75":1160000},"terraced":{"n":159,"med":817500,"p25":680000,"p75":962500},"flat":{"n":249,"med":450000,"p25":375000,"p75":540000},"zone":"SE4","all":{"n":444,"med":562500,"p25":435000,"p75":805000},"house":{"n":195,"med":825000,"p25":693000,"p75":995000}},"foresthill":{"detached":{"n":17,"med":1075000,"p25":940000,"p75":1390000},"semi":{"n":69,"med":930000,"p25":768000,"p75":1070000},"terraced":{"n":168,"med":750000,"p25":620000,"p75":885000},"flat":{"n":349,"med":413000,"p25":350000,"p75":485000},"zone":"SE23","all":{"n":603,"med":508000,"p25":390000,"p75":765000},"house":{"n":254,"med":805571,"p25":658250,"p75":955000}},"wembleypark":{"detached":{"n":17,"med":835000,"p25":750000,"p75":900000},"semi":{"n":108,"med":638000,"p25":575000,"p75":740000},"terraced":{"n":51,"med":520000,"p25":479950,"p75":570000},"flat":{"n":263,"med":439560,"p25":340000,"p75":595000},"zone":"HA9","all":{"n":439,"med":525000,"p25":390000,"p75":645000},"house":{"n":176,"med":619250,"p25":525000,"p75":735000}},"prestonroad":{"detached":{"n":17,"med":835000,"p25":750000,"p75":900000},"semi":{"n":108,"med":638000,"p25":575000,"p75":740000},"terraced":{"n":51,"med":520000,"p25":479950,"p75":570000},"flat":{"n":263,"med":439560,"p25":340000,"p75":595000},"zone":"HA9","all":{"n":439,"med":525000,"p25":390000,"p75":645000},"house":{"n":176,"med":619250,"p25":525000,"p75":735000}},"harrowonthehill":{"detached":{"n":19,"med":975000,"p25":825000,"p75":1300000},"semi":{"n":59,"med":625000,"p25":575000,"p75":720000},"terraced":{"n":59,"med":596000,"p25":520000,"p75":658000},"flat":{"n":250,"med":358000,"p25":300000,"p75":435000},"zone":"HA1","all":{"n":387,"med":430000,"p25":332500,"p75":575000},"house":{"n":137,"med":630000,"p25":558500,"p75":730000}},"finchleyroad":{"detached":{"n":8,"med":3672500,"p25":2400000,"p75":4200000},"semi":{"n":24,"med":3525025,"p25":1842750,"p75":4083057},"terraced":{"n":78,"med":2210000,"p25":1735000,"p75":3025000},"flat":{"n":590,"med":855000,"p25":605000,"p75":1250000},"zone":"NW3","all":{"n":700,"med":920000,"p25":645000,"p75":1655000},"house":{"n":110,"med":2322500,"p25":1790000,"p75":3500050}},"ealingbroadway":{"detached":{"n":56,"med":1787500,"p25":1400000,"p75":2570280},"semi":{"n":74,"med":1193750,"p25":920000,"p75":1500000},"terraced":{"n":151,"med":850000,"p25":685000,"p75":1030000},"flat":{"n":399,"med":475200,"p25":392000,"p75":590000},"zone":"W5","all":{"n":680,"med":620000,"p25":450000,"p75":920000},"house":{"n":281,"med":1018000,"p25":800000,"p75":1400000}},"actonmainline":{"detached":{"n":11,"med":1065000,"p25":975000,"p75":1710000},"semi":{"n":97,"med":935000,"p25":780000,"p75":1316000},"terraced":{"n":100,"med":890000,"p25":750000,"p75":1066500},"flat":{"n":449,"med":410000,"p25":345000,"p75":530000},"zone":"W3","all":{"n":657,"med":515000,"p25":370000,"p75":775000},"house":{"n":208,"med":927500,"p25":765000,"p75":1185000}},"hanwell":{"semi":{"n":56,"med":770000,"p25":630000,"p75":999750},"terraced":{"n":130,"med":665000,"p25":555000,"p75":821500},"flat":{"n":134,"med":419762,"p25":366500,"p75":465000},"zone":"W7","all":{"n":323,"med":543000,"p25":425000,"p75":752999},"house":{"n":189,"med":715000,"p25":578500,"p75":845000}},"bexleyheath":{"detached":{"n":19,"med":700000,"p25":547696,"p75":840000},"semi":{"n":65,"med":526000,"p25":465000,"p75":600000},"terraced":{"n":38,"med":420000,"p25":396000,"p75":491500},"flat":{"n":71,"med":280000,"p25":250000,"p75":335000},"zone":"DA6","all":{"n":193,"med":420000,"p25":301000,"p75":547000},"house":{"n":122,"med":500000,"p25":425000,"p75":600000}},"welling":{"detached":{"n":12,"med":548250,"p25":475000,"p75":610000},"semi":{"n":330,"med":492000,"p25":450000,"p75":545000},"terraced":{"n":136,"med":435000,"p25":395000,"p75":490000},"flat":{"n":55,"med":250000,"p25":190000,"p75":310000},"zone":"DA16","all":{"n":533,"med":466000,"p25":405000,"p75":520000},"house":{"n":478,"med":480000,"p25":430000,"p75":528000}},"erith":{"detached":{"n":11,"med":565000,"p25":450000,"p75":685000},"semi":{"n":114,"med":425000,"p25":380000,"p75":475000},"terraced":{"n":164,"med":375000,"p25":340000,"p75":407000},"flat":{"n":97,"med":235000,"p25":180000,"p75":270000},"zone":"DA8","all":{"n":386,"med":370000,"p25":287500,"p75":425000},"house":{"n":289,"med":395000,"p25":360000,"p75":445000}},"belvedere":{"detached":{"n":9,"med":525000,"p25":491500,"p75":620000},"semi":{"n":66,"med":425000,"p25":380000,"p75":460000},"terraced":{"n":113,"med":380000,"p25":350000,"p75":420000},"flat":{"n":81,"med":245000,"p25":203000,"p75":262000},"zone":"DA17","all":{"n":269,"med":365000,"p25":262000,"p75":425000},"house":{"n":188,"med":400000,"p25":360000,"p75":445000}},"ebbsfleet":{"detached":{"n":28,"med":600000,"p25":550000,"p75":629995},"semi":{"n":59,"med":450000,"p25":365000,"p75":495000},"terraced":{"n":94,"med":325000,"p25":280000,"p75":367000},"flat":{"n":72,"med":272500,"p25":187000,"p75":298000},"zone":"DA10","all":{"n":253,"med":325000,"p25":280000,"p75":450000},"house":{"n":181,"med":380000,"p25":310000,"p75":485000}},"customhouse":{"semi":{"n":10,"med":445000,"p25":425000,"p75":485000},"terraced":{"n":94,"med":446275,"p25":415000,"p75":500000},"flat":{"n":808,"med":452956,"p25":365000,"p75":560500},"zone":"E16","all":{"n":914,"med":451200,"p25":370000,"p75":550000},"house":{"n":106,"med":448775,"p25":420000,"p75":500000}},"royalvictoria":{"semi":{"n":10,"med":445000,"p25":425000,"p75":485000},"terraced":{"n":94,"med":446275,"p25":415000,"p75":500000},"flat":{"n":808,"med":452956,"p25":365000,"p75":560500},"zone":"E16","all":{"n":914,"med":451200,"p25":370000,"p75":550000},"house":{"n":106,"med":448775,"p25":420000,"p75":500000}},"poplar":{"terraced":{"n":19,"med":602000,"p25":560000,"p75":740000},"flat":{"n":317,"med":463660,"p25":380000,"p75":600000},"zone":"E14 0/6","all":{"n":336,"med":466505,"p25":384000,"p75":602000},"house":{"n":19,"med":602000,"p25":560000,"p75":740000}},"bethnalgreen":{"terraced":{"n":50,"med":882500,"p25":770000,"p75":1085000},"flat":{"n":433,"med":499850,"p25":405000,"p75":599950},"zone":"E2","all":{"n":484,"med":511000,"p25":412500,"p75":650000},"house":{"n":51,"med":895000,"p25":770000,"p75":1100000}},"londonfields":{"semi":{"n":12,"med":1400000,"p25":1375000,"p75":2370000},"terraced":{"n":72,"med":962500,"p25":780000,"p75":1580000},"flat":{"n":451,"med":560000,"p25":447000,"p75":700000},"zone":"E8","all":{"n":538,"med":604000,"p25":473600,"p75":780000},"house":{"n":87,"med":1150000,"p25":792000,"p75":1580000}},"dalston":{"semi":{"n":12,"med":1400000,"p25":1375000,"p75":2370000},"terraced":{"n":72,"med":962500,"p25":780000,"p75":1580000},"flat":{"n":451,"med":560000,"p25":447000,"p75":700000},"zone":"E8","all":{"n":538,"med":604000,"p25":473600,"p75":780000},"house":{"n":87,"med":1150000,"p25":792000,"p75":1580000}},"hackneywick":{"semi":{"n":6,"med":1042500,"p25":830000,"p75":1540000},"terraced":{"n":75,"med":995000,"p25":730000,"p75":1260000},"flat":{"n":266,"med":463750,"p25":380000,"p75":581000},"zone":"E9","all":{"n":349,"med":510000,"p25":410000,"p75":760000},"house":{"n":83,"med":995000,"p25":760000,"p75":1265000}},"clapton":{"terraced":{"n":119,"med":1227500,"p25":935000,"p75":1452000},"flat":{"n":313,"med":490000,"p25":385000,"p75":626000},"zone":"E5","all":{"n":437,"med":585000,"p25":425000,"p75":825000},"house":{"n":124,"med":1228750,"p25":950000,"p75":1453000}},"leyton":{"semi":{"n":19,"med":650000,"p25":568000,"p75":882000},"terraced":{"n":267,"med":707000,"p25":590000,"p75":830000},"flat":{"n":343,"med":412000,"p25":340000,"p75":483500},"zone":"E10","all":{"n":631,"med":504500,"p25":393800,"p75":680000},"house":{"n":288,"med":705000,"p25":590000,"p75":835000}},"tottenhamhale":{"semi":{"n":15,"med":515000,"p25":455000,"p75":575000},"terraced":{"n":227,"med":550000,"p25":475000,"p75":671000},"flat":{"n":220,"med":347425,"p25":290000,"p75":430000},"zone":"N17","all":{"n":463,"med":456000,"p25":340000,"p75":565000},"house":{"n":243,"med":550000,"p25":475000,"p75":665000}}};
+
+/* Several areas share a postcode zone — E3 covers both Mile End and Bow Road,
+   E8 covers both Dalston and London Fields. Where that happens the price is a
+   property of the zone, not the area, and the card says so. */
+const ZONE_SHARERS = (() => {
+  const byZone = {};
+  for(const [id, p] of Object.entries(PRICES)) (byZone[p.zone] = byZone[p.zone] || []).push(id);
+  return byZone;
+})();
+
+const AREA_BY_ID = Object.fromEntries(AREAS.map(a => [a.id, a]));
+
+/* The hand-estimated buy figures were guesses, and some were badly wrong —
+   Wanstead was out by £235k. Replace every one with the real median. Houses
+   (detached + semi + terraced) where there is a usable sample, otherwise all
+   sales, which is the honest fallback in flat-dominated areas like Custom House. */
+AREAS.forEach(a => {
+  const p = PRICES[a.id];
+  if(!p) return;
+  const src = (p.house && p.house.n >= 8) ? p.house : p.all;
+  if(src) { a.buy = src.med; a.buyN = src.n; a.buyBasis = (src === p.house) ? "houses" : "all sales"; }
+  a.zone = p.zone;
+  a.zoneShared = (ZONE_SHARERS[p.zone] || []).filter(x => x !== a.id);
+});
 
 /* ============================================================================
    3. STATE
@@ -714,7 +827,7 @@ const DEFAULTS = {
   changeMins: 5,     // penalty per interchange
   needParking: false,
   showOver: true,   // keep near-misses visible rather than silently hiding them
-  maxRent: 2400,
+  maxBuy: 750000,   // scored against real Land Registry medians, not my guesses
   sort: "match",
   mapView: "geo",   // "geo" = real geography, "time" = the polar isochrone
   labelAll: false,
@@ -782,9 +895,12 @@ function score(a, j){
   const commute = j.total <= 25 ? 5
                 : j.total >= state.target + 12 ? 0
                 : 5 * (1 - (j.total - 25) / ((state.target + 12) - 25));
-  const value = a.rent <= 1400 ? 5
-              : a.rent >= 2400 ? 1
-              : 5 - 4 * (a.rent - 1400) / 1000;
+  /* Value is scored from the real median sold price against your budget:
+     comfortably under scores 5, right at it scores ~2.5, well over scores 0. */
+  const b = state.maxBuy, price = a.buy || b;
+  const value = price <= b * 0.6 ? 5
+              : price >= b * 1.4 ? 0
+              : 5 * (1 - (price - b*0.6) / (b*0.8));
   const parts = { commute:Math.max(0,commute), parking:a.parking, walk:a.walk,
                   green:a.green, amen:a.amen, value:Math.max(0,value) };
   let got = 0, max = 0;
@@ -801,7 +917,7 @@ function evaluate(){
 function passes(r){
   if(r.j.total > state.target && !state.showOver) return false;
   if(state.needParking && r.a.parking < 3) return false;
-  if(r.a.rent > state.maxRent) return false;
+  if(r.a.buy && r.a.buy > state.maxBuy) return false;
   return true;
 }
 function sorted(rows){
@@ -811,7 +927,7 @@ function sorted(rows){
     parking: (x,y) => y.a.parking - x.a.parking || x.j.total - y.j.total,
     walk:    (x,y) => y.a.walk - x.a.walk || x.j.total - y.j.total,
     green:   (x,y) => y.a.green - x.a.green || x.j.total - y.j.total,
-    rent:    (x,y) => x.a.rent - y.a.rent
+    price:   (x,y) => (x.a.buy||9e9) - (y.a.buy||9e9)
   }[state.sort] || ((x,y)=>y.s.pct-x.s.pct);
   return rows.slice().sort(by);
 }
@@ -887,7 +1003,7 @@ function renderConsole(){
     ctlRange("changeMins","Cost of each interchange",state.changeMins,2,10,1," min","Stairs, platform, and waiting for the next train.")+
     ctlSwitch("needParking","Must have workable parking", state.needParking, "Hides anywhere parking is genuinely hard.")+
     ctlSwitch("showOver","Show areas over the limit", state.showOver, "Near-misses are worth seeing rather than silently dropping.")+
-    ctlRange("maxRent","Rent ceiling (2-bed)",state.maxRent,1300,2500,50,"","")+
+    ctlRange("maxBuy","Purchase budget",state.maxBuy,300000,1300000,25000,"","Filters and scores on real median sold prices, not asking prices.")+
   '</div></div>'+
 
   '<div class="panel"><header><span class="eyebrow">What matters to you</span>'+
@@ -924,7 +1040,7 @@ function renderConsole(){
   if(rw) rw.onclick = () => { state.weights = JSON.parse(JSON.stringify(DEFAULTS.weights)); save(); renderConsole(); renderAll(); };
 }
 function ctlRange(id,label,val,min,max,step,suffix,hint){
-  const shown = id === "maxRent" ? money(val) : val + suffix;
+  const shown = id === "maxBuy" ? kk(val) : val + suffix;
   return '<div class="ctl"><label for="'+id+'">'+label+'<span class="val">'+shown+'</span></label>'+
     '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
     (hint ? '<div class="hint">'+hint+'</div>' : '')+'</div>';
@@ -968,12 +1084,41 @@ function card(r, rank){
       '<div class="note"><b>Watch out</b><span>'+esc(a.watch)+'</span></div>'+
       '<div class="note"><b>Parks</b><span>'+esc(a.park)+'</span></div>'+
     '</div>'+
+    soldStrip(a)+
     '<div class="cfoot">'+
-      '<div class="money"><span>Rent, 2-bed <b>'+money(a.rent)+'</b>/mo</span>'+
-      '<span>Buy, 3-bed <b>'+kk(a.buy)+'</b></span></div>'+
+      '<div class="money"><span>Rent, 2-bed <b>'+money(a.rent)+'</b>/mo <em style="font-style:normal;color:var(--ink-4)">(estimate)</em></span></div>'+
       '<button class="star" data-star="'+a.id+'" aria-pressed="'+on+'">'+(on ? "★ On the shortlist" : "☆ Shortlist")+'</button>'+
     '</div>'+
   '</article>';
+}
+
+
+/* Real sold prices for one area. Types with fewer than 8 sales behind them are
+   dimmed rather than hidden — a thin sample is information too, as long as the
+   count is on screen next to the number. */
+function soldStrip(a){
+  const p = PRICES[a.id];
+  if(!p || !p.all) return "";
+  const hero = (p.house && p.house.n >= 8) ? p.house : p.all;
+  const heroLabel = (hero === p.house) ? "median house" : "median, all sales";
+  const cell = (key, label) => {
+    const v = p[key];
+    if(!v) return '<div class="ptype thin"><div class="t">'+label+'</div><div class="m">—</div><div class="n">no sales</div></div>';
+    return '<div class="ptype'+(v.n < 8 ? " thin" : "")+'" title="'+esc(label+": median "+money(v.med)+", middle half "+money(v.p25)+"–"+money(v.p75)+", from "+v.n+" sales")+'">'+
+      '<div class="t">'+label+'</div><div class="m">'+kk(v.med)+'</div><div class="n">'+v.n+' sold</div></div>';
+  };
+  const shared = a.zoneShared && a.zoneShared.length
+    ? ' Shared postcode zone with '+a.zoneShared.map(id => (AREA_BY_ID[id]||{}).name || id).join(", ")+
+      ', so this price describes the zone rather than the area alone.'
+    : '';
+  return '<div class="soldstrip">'+
+    '<div class="soldhead">'+
+      '<span class="src">Sold prices · '+esc(p.zone)+' · '+p.all.n+' sales, 2025–26</span>'+
+      '<span class="hero">'+kk(hero.med)+'<small>'+heroLabel+'</small></span>'+
+    '</div>'+
+    '<div class="ptypes">'+cell("terraced","Terraced")+cell("semi","Semi")+cell("detached","Detached")+cell("flat","Flat")+'</div>'+
+    '<div class="pnote">Middle half of house sales '+money((p.house||p.all).p25)+'–'+money((p.house||p.all).p75)+'.'+shared+'</div>'+
+  '</div>';
 }
 
 function renderResults(){
@@ -982,7 +1127,7 @@ function renderResults(){
   const host = document.getElementById("results");
   if(!rows.length){
     host.innerHTML = '<div class="empty"><h3>Nothing clears those constraints</h3>'+
-      '<p>Try raising the rent ceiling, allowing a longer walk to the station, or turning on “show areas over the limit”.</p></div>';
+      '<p>Try raising the purchase budget, allowing a longer walk to the station, or turning on “show areas over the limit”.</p></div>';
   } else {
     host.innerHTML = rows.map((r,i) => card(r, i+1)).join("");
     host.querySelectorAll("[data-star]").forEach(b => b.onclick = () => toggleStar(b.dataset.star));
@@ -1036,8 +1181,9 @@ function renderCompare(){
       R("Walkability (1–5)",  r => r.a.walk, "high")+
       R("Green space (1–5)",  r => r.a.green, "high")+
       R("Amenities (1–5)",    r => r.a.amen, "high")+
-      R("Rent, 2-bed (£/mo)", r => r.a.rent, "low")+
-      R("Buy, 3-bed (£000s)", r => Math.round(r.a.buy/1000), "low")+
+      R("Rent, 2-bed (est. £/mo)", r => r.a.rent, "low")+
+      R("Median house (£000s)", r => Math.round(r.a.buy/1000), "low")+
+      R("Sales behind it",   r => r.a.buyN || 0, "high")+
       '<tr><th>Arrive at</th>'+rows.map(r=>'<td>'+esc(r.j.term.name)+'</td>').join("")+'</tr>'+
       '<tr><th>Watch out</th>'+rows.map(r=>'<td style="min-width:200px; white-space:normal; font-size:13px; color:var(--ink-2)">'+esc(r.a.watch)+'</td>').join("")+'</tr>'+
     '</tbody></table></div>'+
@@ -1316,6 +1462,118 @@ function renderMap(){
   if(la) la.onchange = e => { state.labelAll = e.target.checked; save(); renderMap(); };
 }
 
+
+/* ============================================================================
+   9c. PRICE AGAINST COMMUTE, AND THE EFFICIENT FRONTIER
+   The decision is a trade between two numbers, so plot them against each other.
+   The frontier is the set of areas that nothing else beats on BOTH — anywhere
+   off it, there is somewhere strictly cheaper AND quicker, which makes it hard
+   to justify. Colour is deliberately not doing identity work here: the x-axis
+   already says whether an area clears the limit, so the one accent is spent on
+   the frontier and everything else stays quiet.
+   ========================================================================== */
+const Y_CAP = 1400000;   // Finchley Road is £2.3m and would flatten everything else
+
+function frontier(rows){
+  const sorted = rows.slice().sort((x,y) => x.j.total - y.j.total || x.a.buy - y.a.buy);
+  const out = []; let best = Infinity;
+  for(const r of sorted){ if(r.a.buy < best){ best = r.a.buy; out.push(r); } }
+  return out;
+}
+
+function renderPrices(){
+  const rows = evaluate().filter(passes).filter(r => r.a.buy);
+  const host = document.getElementById("panel-prices");
+  if(rows.length < 3){
+    host.innerHTML = '<div class="empty"><h3>Not enough areas to plot</h3><p>Loosen the filters on the Explore tab.</p></div>';
+    return;
+  }
+  const W = 1000, H = 560, L = 84, R = 30, T = 26, B = 54;
+  const xs = rows.map(r => r.j.total);
+  const x0 = Math.min(...xs) - 2, x1 = Math.max(...xs) + 2;
+  const prices = rows.map(r => r.a.buy);
+  const y1 = Math.min(Y_CAP, Math.max(...prices) * 1.06);
+  const y0 = Math.max(0, Math.min(...prices) * 0.92);
+  const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const Y = v => H - B - (Math.min(v, y1) - y0) / (y1 - y0) * (H - T - B);
+
+  /* grid + axes */
+  let g = "";
+  const yStep = (y1 - y0) > 900000 ? 200000 : (y1 - y0) > 450000 ? 100000 : 50000;
+  for(let v = Math.ceil(y0/yStep)*yStep; v <= y1; v += yStep){
+    g += '<line x1="'+L+'" y1="'+Y(v).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(v).toFixed(1)+'" stroke="var(--line-soft)" stroke-width="1" />'+
+         '<text class="axis-l" x="'+(L-10)+'" y="'+(Y(v)+3.5).toFixed(1)+'" text-anchor="end">'+kk(v)+'</text>';
+  }
+  for(let v = Math.ceil(x0/5)*5; v <= x1; v += 5){
+    g += '<line x1="'+X(v).toFixed(1)+'" y1="'+T+'" x2="'+X(v).toFixed(1)+'" y2="'+(H-B)+'" stroke="var(--line-soft)" stroke-width="1" />'+
+         '<text class="axis-l" x="'+X(v).toFixed(1)+'" y="'+(H-B+18)+'" text-anchor="middle">'+v+'</text>';
+  }
+
+  /* the limit, and the region beyond it */
+  const tx = X(state.target);
+  const limit = tx < W - R
+    ? '<rect x="'+tx.toFixed(1)+'" y="'+T+'" width="'+(W-R-tx).toFixed(1)+'" height="'+(H-T-B)+'" fill="var(--bad)" opacity=".05" />'+
+      '<line x1="'+tx.toFixed(1)+'" y1="'+T+'" x2="'+tx.toFixed(1)+'" y2="'+(H-B)+'" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5" />'+
+      '<text class="axis-t" x="'+(tx+7).toFixed(1)+'" y="'+(T+13)+'" fill="var(--accent)">over '+state.target+' min</text>'
+    : '';
+
+  /* marks — plain first, frontier on top */
+  const front = frontier(rows), frontIds = new Set(front.map(r => r.a.id));
+  let marks = "", labels = [];
+  rows.forEach(r => {
+    const cx = X(r.j.total), cy = Y(r.a.buy);
+    const isFront = frontIds.has(r.a.id), star = shortlist.includes(r.a.id);
+    const over = r.a.buy > y1;
+    marks += '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(isFront?7:5)+'" '+
+      'class="'+(isFront?"dot-front":"dot-plain")+'" stroke="var(--surface)" stroke-width="2">'+
+      '<title>'+esc(r.a.name+" — "+r.j.total+" min, median "+money(r.a.buy)+" ("+(r.a.buyBasis||"")+", "+(r.a.buyN||0)+" sales)")+'</title></circle>';
+    if(star) marks += '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="12" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".6" />';
+    if(over) marks += '<path d="M '+(cx-4).toFixed(1)+' '+(cy+3)+' L '+cx.toFixed(1)+' '+(cy-4)+' L '+(cx+4).toFixed(1)+' '+(cy+3)+' Z" fill="var(--ink-3)"><title>'+esc(r.a.name+" is above the top of this chart at "+money(r.a.buy))+'</title></path>';
+    if(isFront || star)
+      labels.push({ name:r.a.name, x:cx, y:cy, th:Math.atan2(1,-0.6), starred:star, colour:"var(--ink-4)" });
+  });
+
+  /* the frontier itself, as a stepped line */
+  let fpath = "";
+  front.forEach((r,i) => {
+    const cx = X(r.j.total), cy = Y(r.a.buy);
+    fpath += i === 0 ? "M "+cx.toFixed(1)+" "+cy.toFixed(1)
+                     : " L "+cx.toFixed(1)+" "+Y(front[i-1].a.buy).toFixed(1)+" L "+cx.toFixed(1)+" "+cy.toFixed(1);
+  });
+
+  const svg = '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Median sold house price plotted against door-to-door commute for every area, with the efficient frontier picked out">'+
+    g + limit +
+    '<path d="'+fpath+'" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".45" stroke-dasharray="1 5" stroke-linecap="round" />'+
+    marks + declutter(labels, W) +
+    '<text class="axis-t" x="'+((L+W-R)/2)+'" y="'+(H-8)+'" text-anchor="middle">Door to door, minutes</text>'+
+    '<text class="axis-t" transform="translate(16,'+((T+H-B)/2)+') rotate(-90)" text-anchor="middle">Median sold price</text>'+
+  '</svg>';
+
+  const table = '<div class="tablewrap" style="margin-top:16px"><table><thead><tr>'+
+    '<th>On the frontier</th><th>Door to door</th><th>Median house</th><th>Parking</th><th>Zone · sales</th></tr></thead><tbody>'+
+    front.map(r => '<tr><th style="text-transform:none; font-size:14px; color:var(--ink); letter-spacing:0">'+esc(r.a.name)+
+      '<div style="font-weight:400; color:var(--ink-3); font-size:12px">'+esc(r.a.loc)+'</div></th>'+
+      '<td class="num">'+r.j.total+' min</td><td class="num">'+money(r.a.buy)+'</td>'+
+      '<td class="num">'+r.a.parking+'/5</td>'+
+      '<td class="num" style="color:'+((r.a.buyN||0) < 25 ? "var(--warn)" : "var(--ink-3)")+'">'+esc(r.a.zone||"")+' · '+(r.a.buyN||0)+
+      ((r.a.buyN||0) < 25 ? ' ⚠' : '')+'</td></tr>').join("")+
+    '</tbody></table></div>';
+
+  host.innerHTML = '<div class="chartcard">'+
+    '<div class="charthead"><h2>What the commute actually costs</h2>'+
+    '<p>Every area plotted by real median sold price against door-to-door commute. '+
+    'The magenta points form the <b>efficient frontier</b>: nothing else on this chart is both cheaper and quicker. '+
+    'Anywhere off the frontier, there is somewhere strictly better on both counts — which is a hard thing to argue with. '+
+    'Hover any point for its numbers.</p></div>'+
+    svg + table +
+    '<p class="mapnote" style="text-align:left; margin-top:14px; max-width:80ch">Prices are HM Land Registry Price Paid Data for 2025 and 2026 to date — '+
+    '1,184,740 recorded sales, filtered to these postcode zones and to standard full-value transactions. '+
+    'These are prices actually paid, not asking prices. Sample sizes are shown against every figure so you can judge how much to trust it. '+
+    'A count marked ⚠ is under 25 sales — thin enough that the median could move with one unusual transaction. Poplar is the one to watch on this chart: '+
+    'it reaches the frontier on a small number of house sales in a district that is overwhelmingly flats.</p>'+
+  '</div>';
+}
+
 /* ============================================================================
    10. METHOD
    ========================================================================== */
@@ -1369,6 +1627,30 @@ function renderMethod(){
   '(<b>Belvedere</b>, <b>Erith</b>, and Bexley beyond) drops onto Southeastern and immediately loses ten to fifteen minutes to a change or to '+
   'that Cannon Street walk. Abbey Wood is not just a good option in south-east London — it is the edge of what is reachable at all.</p>'+
 
+  '<h3>Where the prices come from</h3>'+
+  '<p>Every price on this page is <b>HM Land Registry Price Paid Data</b> for 2025 and 2026 to date — the official record of '+
+  '1,184,740 residential sales in England and Wales, filtered to the postcode zones behind these areas and to standard full-value '+
+  'transactions. Published under the Open Government Licence. These are prices people <em>actually paid</em>, which is worth considerably '+
+  'more than the asking prices a property portal would show you: asking prices are an opening bid, and in a slow market they are fiction.</p>'+
+  '<p>Each area is mapped to a postcode zone, shown on every card with the number of sales behind it. Where a district covers two areas '+
+  'with different characters the split is done on data rather than guesswork — E11 is separated by borough, because Redbridge is the Wanstead '+
+  'side and Waltham Forest is the Leytonstone side. Sectors were resolved by checking which ones known streets actually fall in. '+
+  'Some areas genuinely share a zone (Mile End and Bow Road are both E3; Dalston and London Fields are both E8) and those cards say so.</p>'+
+  '<p><b>This replaced a set of my own estimates, and several were badly wrong.</b> Wanstead was estimated at £700k and the real median house '+
+  'price is £935k. Shenfield was estimated at £675k against a real £872k. That mattered: on the old guesses Wanstead ranked as the best '+
+  'all-rounder, and against a £750k budget it does not qualify at all. If a number here disagrees with your instinct, the number is '+
+  'measured and the instinct is not.</p>'+
+  '<p>Two honest limits. Land Registry publishes sales, not rentals, so the <b>rent figures remain estimates</b> and are labelled as such — '+
+  'they are the one number on this page that is not measured. And a median is not a house: it tells you the middle of a zone, not what any '+
+  'particular street costs. The quartile range on each card is there to show you how wide the spread is.</p>'+
+
+  '<h3>Why scraping Rightmove was not the answer</h3>'+
+  '<p>The obvious way to do this is to scrape a property portal. Both Rightmove and Zoopla explicitly prohibit automated collection in their '+
+  'terms of use, both run bot protection that breaks scrapers within days, and neither is even reachable from where this was built. '+
+  'Land Registry data is better anyway: it is open, it is complete, it is what people paid rather than what they hoped for, and it will '+
+  'still work in a year. The one thing it cannot give you is <em>live listings</em> — for that, run the search yourself on a portal and '+
+  'bring the addresses back here to check them against the commute.</p>'+
+
   '<h3>The scores are judgement, not measurement</h3>'+
   '<p>Parking, walkability, green space and amenities are hand-scored 1–5 from what these places are actually like. '+
   '<b>Parking</b> weighs controlled-zone coverage, how likely a house is to have a drive, and street pressure — it is the score most worth checking yourself, '+
@@ -1392,21 +1674,22 @@ function renderMethod(){
   '</ul>'+
 
   '<h3>If you want the short answer</h3>'+
-  '<p>Two answers, depending on how hard a constraint the car really is.</p>'+
-  '<p><b>If parking is negotiable</b>, the ranking is emphatic. <b>Forest Gate</b> at 29 minutes, <b>Stratford</b> at 26 and '+
-  '<b>Walthamstow Central</b> at 36 take the top three, because each pairs a short commute with genuinely good streets, parks and shops. '+
-  'All three score “workable” rather than easy on parking. And further down that list <b>Mile End</b> at 21 minutes wins on every single '+
-  'axis except the one you said you cannot move on.</p>'+
-  '<p><b>If the car is non-negotiable</b>, turn on the parking filter and four names come back. <b>Wanstead</b> (39 min) is the best '+
-  'all-rounder: village high street, Epping Forest, streets wide enough to park on. <b>Upminster</b> (39 min) is the value play — '+
-  'the same commute for about £300 a month less and a house with a drive, paid for by being genuinely far out. '+
-  '<b>Highams Park</b> (44 min) sits between the two and is the one most likely to be underpriced for what it gives you. '+
-  'And <b>Shenfield</b> (44 min) buys the most house of any of them, if you are willing to run your mornings around the fast departures.</p>'+
-  '<p>If the budget is the binding constraint rather than the commute, the cheapest things that actually clear the limit are '+
-  '<b>Gallions Reach</b> (44 min, ~£420k) and <b>Custom House</b> (34 min, ~£480k) in the Royal Docks, and <b>Abbey Wood</b> '+
-  '(46 min, ~£430k) just outside it. All three trade amenities for price, and all three are honest about it above.</p>'+
-  '<p>The near-misses worth testing in person rather than trusting this page on: <b>Abbey Wood</b> (46), <b>Beckton</b> (46), '+
-  '<b>Chingford</b> (49) and <b>Gidea Park</b> (46). Each turns on a single train or a single slider.</p>'+
+  '<p>This changed once real sold prices replaced my estimates, so read it as the current answer rather than the earlier one.</p>'+
+  '<p><b>If the car is non-negotiable</b> and the budget is around £750k, the list is short: <b>Upminster</b> (39 min, median house £615k) '+
+  'is the strongest — the only area that combines a comfortable commute, guaranteed off-street parking and real change from the budget. '+
+  '<b>Highams Park</b> (44 min, £668k) and <b>Romford</b> (44 min, £530k) follow, and <b>Woolwich</b> (42 min, £463k) is the cheapest of them '+
+  'by a distance, though its sample is thin and heavily weighted to Royal Arsenal flats.</p>'+
+  '<p><b>Wanstead has to come off the recommendation.</b> It was the top pick when I was estimating £700k; the real median house price is '+
+  '£935k across 143 sales, which puts it outside a £750k budget entirely. It is still the nicest area on the list. It is just not one you can '+
+  'buy a house in at that number.</p>'+
+  '<p><b>If parking could flex</b>, the ranking is emphatic and cheap: <b>Stratford</b> (26 min, £540k) and <b>Forest Gate</b> (29 min, £590k) '+
+  'take the top two on almost any weighting, because they pair a short commute with real high streets, parks and prices well inside budget. '+
+  '<b>Poplar</b> (24 min, £602k) is the fastest thing that is also affordable, and turned up because people are actively moving there rather '+
+  'than because the rail geography suggested it.</p>'+
+  '<p><b>The efficient frontier</b> on the Prices tab is the most rigorous way to read all of this: it picks out the areas where nothing else '+
+  'is both cheaper and quicker. Everything on it is worth a look; everything off it is beaten on both counts by something on it. '+
+  'For your constraints the relevant stretch runs <b>Stratford → Manor Park → Barking → Custom House → Dagenham Heathway</b>, '+
+  'and parking gets easier as you move right along it.</p>'+
   '</div>';
 }
 
@@ -1417,13 +1700,14 @@ function renderAll(){
   renderResults();
   if(tab === "compare") renderCompare();
   if(tab === "map") renderMap();
+  if(tab === "prices") renderPrices();
   if(tab === "method") renderMethod();
   document.getElementById("tab-n-short").textContent = shortlist.length || "";
 }
 function showTab(t){
   tab = t;
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
-  ["explore","compare","map","method"].forEach(k =>
+  ["explore","compare","map","prices","method"].forEach(k =>
     document.getElementById("panel-"+k).hidden = (k !== t));
   renderAll();
   window.scrollTo({ top:0, behavior:"instant" });
