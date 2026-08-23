@@ -29,6 +29,16 @@ The office is within walking distance of six stations, and the final walk ranges
 re-ranks the whole map — it's why Upminster, 22 minutes out on the c2c into Fenchurch Street,
 lands inside the limit while places that look far closer on a tube map don't.
 
+## Deploying
+
+`.github/workflows/pages.yml` publishes `index.html` to GitHub Pages on every push to `main`.
+
+It needs one manual step first, once per repository: **Settings → Pages → Build and deployment →
+Source: _GitHub Actions_**. A workflow token is not allowed to turn Pages on by itself, so the
+first run fails with `Get Pages site failed` until that switch is flipped. After that, re-run the
+workflow (Actions → Deploy to GitHub Pages → Run workflow) and every later push deploys
+automatically.
+
 ## Caveats
 
 Journey times are built from scheduled services and typical peak frequencies, not a live API.
