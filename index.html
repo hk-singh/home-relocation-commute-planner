@@ -1,0 +1,1337 @@
+<title>Aldgate in 45 Minutes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F6F8FB; --line:#D6DCE6; --line-soft:#E4E9F0;
+  --ink:#111722; --ink-2:#3D4756; --ink-3:#697588; --ink-4:#8E99AB;
+  --accent:#9B0056; --accent-ink:#FFFFFF; --accent-soft:#F7E6EF; --accent-line:#E3B9CF;
+  --good:#1B6B45; --good-soft:#E1F0E8; --warn:#8A5B06; --warn-soft:#F7ECD8; --bad:#A32118; --bad-soft:#F8E4E2;
+  --walkfill:#B8C2D2; --waitfill:#CFD7E3; --changefill:#9AA5B6;
+  --river:#C2D7E9; --river-ink:#7A96AE;
+  --shadow:0 1px 2px rgba(17,23,34,.06),0 8px 24px -12px rgba(17,23,34,.18);
+  --r:5px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1017; --surface:#151B25; --surface-2:#1B2230; --line:#2A3342; --line-soft:#222A37;
+    --ink:#E9EDF4; --ink-2:#C2CAD8; --ink-3:#8E9AAD; --ink-4:#6E7A8D;
+    --accent:#E0559A; --accent-ink:#1B0512; --accent-soft:#2A1220; --accent-line:#5A2340;
+    --good:#5FCB95; --good-soft:#12281E; --warn:#E2B15C; --warn-soft:#2A2113; --bad:#F0796C; --bad-soft:#2C1512;
+    --walkfill:#3B4557; --waitfill:#2E3747; --changefill:#4E596C;
+  --river:#1B2C3C; --river-ink:#4F6E8B;
+    --river:#1B2C3C; --river-ink:#4F6E8B;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1017; --surface:#151B25; --surface-2:#1B2230; --line:#2A3342; --line-soft:#222A37;
+  --ink:#E9EDF4; --ink-2:#C2CAD8; --ink-3:#8E9AAD; --ink-4:#6E7A8D;
+  --accent:#E0559A; --accent-ink:#1B0512; --accent-soft:#2A1220; --accent-line:#5A2340;
+  --good:#5FCB95; --good-soft:#12281E; --warn:#E2B15C; --warn-soft:#2A2113; --bad:#F0796C; --bad-soft:#2C1512;
+  --walkfill:#3B4557; --waitfill:#2E3747; --changefill:#4E596C;
+  --river:#1B2C3C; --river-ink:#4F6E8B;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Barlow","Helvetica Neue",Arial,sans-serif; font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:"Barlow Semi Condensed","Barlow",Arial,sans-serif; margin:0; text-wrap:balance; letter-spacing:-.005em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums}
+.eyebrow{font-family:"Barlow Semi Condensed",Arial,sans-serif; text-transform:uppercase; letter-spacing:.11em; font-size:11.5px; font-weight:600; color:var(--ink-3)}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1420px; margin:0 auto; padding:0 20px 72px}
+.topbar{position:sticky; top:0; z-index:40; background:var(--bg); border-bottom:1px solid var(--line); padding-top:18px}
+.masthead{display:flex; flex-wrap:wrap; gap:16px 24px; align-items:flex-end; justify-content:space-between; padding-bottom:14px}
+.masthead h1{font-size:31px; font-weight:700; line-height:1.05}
+.masthead h1 em{font-style:normal; color:var(--accent)}
+.sub{color:var(--ink-3); font-size:14px; margin-top:5px; max-width:62ch}
+.anchor{
+  display:flex; gap:10px; align-items:center; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r); padding:9px 13px; box-shadow:var(--shadow);
+}
+.anchor .dot{width:11px; height:11px; border-radius:50%; background:var(--accent); flex:none; box-shadow:0 0 0 3.5px var(--accent-soft)}
+.anchor b{font-family:"Barlow Semi Condensed",Arial,sans-serif; font-size:15px; display:block; line-height:1.2}
+.anchor span{font-size:12px; color:var(--ink-3); display:block}
+.tabs{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  background:none; border:0; border-bottom:2px solid transparent; padding:9px 14px 10px; white-space:nowrap;
+  font-family:"Barlow Semi Condensed",Arial,sans-serif; font-size:15px; font-weight:600; color:var(--ink-3);
+}
+.tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent)}
+.tab:hover{color:var(--ink)}
+.tab .n{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-4); margin-left:5px}
+
+/* ---------- layout ---------- */
+.cols{display:grid; grid-template-columns:296px minmax(0,1fr); gap:26px; align-items:start; margin-top:22px}
+@media (max-width:980px){ .cols{grid-template-columns:1fr} }
+
+/* ---------- console ---------- */
+.console{position:sticky; top:118px; display:flex; flex-direction:column; gap:12px; max-height:calc(100vh - 140px); overflow-y:auto; padding-right:4px}
+@media (max-width:980px){ .console{position:static; max-height:none; overflow:visible} }
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
+.panel > header{padding:12px 14px 0; display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.panel > .body{padding:11px 14px 14px; display:flex; flex-direction:column; gap:13px}
+.ctl label{display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:13.5px; color:var(--ink-2); font-weight:500}
+.ctl .val{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums}
+.ctl .hint{font-size:11.5px; color:var(--ink-4); margin-top:3px; line-height:1.4}
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; background:transparent; margin:8px 0 0; display:block}
+input[type=range]::-webkit-slider-runnable-track{height:3px; background:var(--line); border-radius:2px}
+input[type=range]::-moz-range-track{height:3px; background:var(--line); border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:15px; height:15px; margin-top:-6px; border-radius:50%; background:var(--accent); border:2px solid var(--surface); box-shadow:0 0 0 1px var(--accent)}
+input[type=range]::-moz-range-thumb{width:13px; height:13px; border-radius:50%; background:var(--accent); border:2px solid var(--surface); box-shadow:0 0 0 1px var(--accent)}
+.switch{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:13.5px; color:var(--ink-2); font-weight:500; cursor:pointer}
+.switch input{position:absolute; opacity:0; pointer-events:none}
+.track{width:36px; height:20px; border-radius:11px; background:var(--line); position:relative; transition:background .16s; flex:none}
+.track::after{content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--surface); box-shadow:0 1px 2px rgba(0,0,0,.3); transition:transform .16s}
+.switch input:checked + .track{background:var(--accent)}
+.switch input:checked + .track::after{transform:translateX(16px)}
+.switch input:focus-visible + .track{outline:2px solid var(--accent); outline-offset:2px}
+.weights{display:flex; flex-direction:column; gap:10px}
+.wrow label{font-size:13.5px}
+.pips{display:flex; gap:3px}
+.pip{width:13px; height:5px; border-radius:1px; background:var(--line)}
+.pip.on{background:var(--accent)}
+.btn{
+  background:var(--surface-2); border:1px solid var(--line); border-radius:var(--r); padding:7px 11px;
+  font-family:"Barlow Semi Condensed",Arial,sans-serif; font-weight:600; font-size:13.5px; color:var(--ink-2);
+}
+.btn:hover{border-color:var(--ink-4); color:var(--ink)}
+.btn.small{padding:5px 9px; font-size:12.5px}
+select{
+  width:100%; background:var(--surface-2); color:var(--ink); border:1px solid var(--line); border-radius:var(--r);
+  padding:7px 9px; font:inherit; font-size:13.5px;
+}
+
+#ctlToggle{display:flex; flex-direction:column; gap:12px}
+#ctlToggle > summary{display:none}
+#ctlToggle #console{display:flex; flex-direction:column; gap:12px}
+@media (max-width:980px){
+  .console{gap:0}
+  #ctlToggle > summary{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; cursor:pointer; list-style:none;
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow);
+    padding:11px 14px; font-family:"Barlow Semi Condensed",Arial,sans-serif; font-weight:600; font-size:15px;
+  }
+  #ctlToggle > summary::-webkit-details-marker{display:none}
+  #ctlToggle > summary .chev{color:var(--ink-3); transition:transform .16s}
+  #ctlToggle[open] > summary .chev{transform:rotate(180deg)}
+  #ctlToggle[open] > summary{margin-bottom:12px}
+}
+
+/* ---------- result cards ---------- */
+.results{display:flex; flex-direction:column; gap:11px}
+.resbar{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:baseline; justify-content:space-between; margin-bottom:3px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden}
+.card.over{opacity:.82}
+.chead{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px 18px; padding:13px 15px 11px; align-items:start}
+.who{min-width:0}
+.who h3{font-size:20px; font-weight:700; line-height:1.15; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.rank{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-4); font-weight:500}
+.who .loc{font-size:12.5px; color:var(--ink-3); margin-top:2px}
+.timebox{text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:3px}
+.big{font-family:"IBM Plex Mono",monospace; font-size:33px; font-weight:600; line-height:.95; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.big small{font-size:13px; font-weight:500; color:var(--ink-3); margin-left:2px; letter-spacing:0}
+.verdict{font-family:"Barlow Semi Condensed",Arial,sans-serif; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; padding:2.5px 7px; border-radius:3px}
+.v-good{background:var(--good-soft); color:var(--good)}
+.v-warn{background:var(--warn-soft); color:var(--warn)}
+.v-bad{background:var(--bad-soft); color:var(--bad)}
+.matchwrap{display:flex; align-items:center; gap:7px}
+.matchbar{width:54px; height:5px; border-radius:3px; background:var(--line); overflow:hidden}
+.matchbar i{display:block; height:100%; background:var(--accent); border-radius:3px}
+.matchnum{font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:600; color:var(--ink-2)}
+
+/* ---------- journey strip ---------- */
+.strip-area{padding:0 15px 12px}
+.strip{position:relative; height:26px; background:var(--surface-2); border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; display:flex}
+.seg{height:100%; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; min-width:0}
+.seg + .seg{border-left:1px solid rgba(255,255,255,.28)}
+.seg.walk{background:repeating-linear-gradient(135deg,var(--walkfill) 0 3px,transparent 3px 6px),var(--waitfill)}
+.seg.wait{background:var(--waitfill)}
+.seg.change{background:var(--changefill)}
+.seg .lbl{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600; white-space:nowrap; padding:0 4px}
+.seg.ride .lbl{color:#fff; text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.seg.ride.dark .lbl{color:#12161f; text-shadow:none}
+.target{position:absolute; top:-4px; bottom:-4px; width:0; border-left:2px dashed var(--accent); z-index:3; pointer-events:none}
+.stripwrap{position:relative; padding-top:14px}
+.tmark{position:absolute; top:0; transform:translateX(-50%); font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--ink-4)}
+.tmark.t-target{color:var(--accent); font-weight:600}
+.route{display:flex; flex-wrap:wrap; gap:5px 7px; align-items:center; margin-top:9px; font-size:12.5px; color:var(--ink-2)}
+.lchip{display:inline-flex; align-items:center; gap:5px; font-family:"Barlow Semi Condensed",Arial,sans-serif; font-weight:600; font-size:12px; padding:1.5px 7px 1.5px 5px; border-radius:10px; background:var(--surface-2); border:1px solid var(--line-soft)}
+.lchip i{width:9px; height:9px; border-radius:50%; flex:none}
+.arrow{color:var(--ink-4)}
+.legend{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11.5px; color:var(--ink-3); margin-top:9px}
+.legend span{display:inline-flex; align-items:center; gap:5px}
+.legend i{width:11px; height:9px; border-radius:2px; display:inline-block}
+
+/* ---------- traits ---------- */
+.traits{display:grid; grid-template-columns:repeat(auto-fit,minmax(112px,1fr)); gap:1px; background:var(--line-soft); border-top:1px solid var(--line-soft)}
+.trait{background:var(--surface); padding:9px 13px}
+.trait .k{font-family:"Barlow Semi Condensed",Arial,sans-serif; text-transform:uppercase; letter-spacing:.08em; font-size:10.5px; font-weight:600; color:var(--ink-4)}
+.trait .dots{display:flex; gap:3px; margin-top:5px}
+.dot5{width:100%; height:4px; border-radius:1px; background:var(--line)}
+.dot5.on{background:var(--ink-2)}
+.trait.hi .dot5.on{background:var(--good)}
+.trait.lo .dot5.on{background:var(--bad)}
+.trait .v{font-size:12px; color:var(--ink-3); margin-top:4px; line-height:1.35}
+.notes{padding:11px 15px 13px; border-top:1px solid var(--line-soft); display:flex; flex-direction:column; gap:6px; background:var(--surface-2)}
+.note{font-size:13px; color:var(--ink-2); display:flex; gap:8px; line-height:1.45}
+.note b{font-family:"Barlow Semi Condensed",Arial,sans-serif; font-weight:600; color:var(--ink-3); flex:none; min-width:64px; text-transform:uppercase; font-size:10.5px; letter-spacing:.08em; padding-top:2px}
+.cfoot{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; justify-content:space-between; padding:9px 15px; border-top:1px solid var(--line-soft)}
+.money{display:flex; gap:16px; font-size:12.5px; color:var(--ink-3)}
+.money b{font-family:"IBM Plex Mono",monospace; color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+.star{background:none; border:1px solid var(--line); border-radius:var(--r); padding:5px 10px; font-family:"Barlow Semi Condensed",Arial,sans-serif; font-weight:600; font-size:12.5px; color:var(--ink-3)}
+.star[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent-line); color:var(--accent)}
+.empty{padding:44px 20px; text-align:center; color:var(--ink-3); background:var(--surface); border:1px dashed var(--line); border-radius:var(--r)}
+.empty h3{font-size:19px; color:var(--ink); margin-bottom:6px}
+
+/* ---------- compare ---------- */
+.tablewrap{overflow-x:auto; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; min-width:640px}
+th,td{text-align:left; padding:10px 13px; border-bottom:1px solid var(--line-soft); font-size:13.5px; vertical-align:top}
+thead th{position:sticky; top:0; background:var(--surface-2); font-family:"Barlow Semi Condensed",Arial,sans-serif; font-size:14px; font-weight:600; z-index:2; border-bottom:1px solid var(--line)}
+tbody th{font-family:"Barlow Semi Condensed",Arial,sans-serif; text-transform:uppercase; letter-spacing:.07em; font-size:10.5px; color:var(--ink-4); font-weight:600; white-space:nowrap; background:var(--surface)}
+td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500}
+.best{color:var(--good); font-weight:600}
+
+/* ---------- prose ---------- */
+.prose{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:24px 26px; max-width:78ch}
+.prose h2{font-size:23px; font-weight:700; margin-bottom:8px}
+.prose h3{font-size:16.5px; font-weight:600; margin:22px 0 6px; color:var(--ink)}
+.prose p, .prose li{color:var(--ink-2); font-size:14.5px; line-height:1.62}
+.prose p{margin:0 0 11px}
+.prose ul{margin:0 0 11px; padding-left:20px; display:flex; flex-direction:column; gap:5px}
+.prose code{font-family:"IBM Plex Mono",monospace; font-size:12.5px; background:var(--surface-2); border:1px solid var(--line-soft); border-radius:3px; padding:1px 5px}
+.callout{background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:var(--r); padding:13px 15px; margin:0 0 16px}
+.callout p{margin:0; color:var(--ink-2); font-size:14px}
+.callout b{color:var(--accent)}
+
+.maphead{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px}
+.seg-ctl{display:inline-flex; border:1px solid var(--line); border-radius:var(--r); overflow:hidden; background:var(--surface-2)}
+.seg-ctl button{
+  background:none; border:0; padding:7px 14px; font-family:"Barlow Semi Condensed",Arial,sans-serif;
+  font-weight:600; font-size:13.5px; color:var(--ink-3); white-space:nowrap;
+}
+.seg-ctl button + button{border-left:1px solid var(--line)}
+.seg-ctl button[aria-selected="true"]{background:var(--accent); color:var(--accent-ink)}
+.seg-ctl button:not([aria-selected="true"]):hover{color:var(--ink)}
+.switch.mini{font-size:13px; color:var(--ink-3); gap:8px}
+.switch.mini .track{width:32px; height:18px}
+.switch.mini .track::after{width:14px; height:14px}
+.switch.mini input:checked + .track::after{transform:translateX(14px)}
+
+/* ---------- map ---------- */
+.mapcard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:16px}
+.mapcard svg{display:block; width:100%; height:auto; max-width:820px; margin:0 auto}
+.mapnote{color:var(--ink-3); font-size:13px; margin:10px auto 0; max-width:70ch; text-align:center}
+@media (prefers-reduced-motion:no-preference){
+  .card{transition:border-color .15s}
+  .card:hover{border-color:var(--ink-4)}
+}
+</style>
+
+<div class="topbar">
+  <div class="wrap" style="padding-bottom:0">
+    <div class="masthead">
+      <div>
+        <h1>Getting to Aldgate in <em>45 minutes</em></h1>
+        <p class="sub">Every area below is scored on the four things that actually matter to you: door-to-door commute, somewhere to put the car, a neighbourhood worth walking around, and green space. Move the sliders until the ranking argues with you.</p>
+      </div>
+      <div class="anchor">
+        <span class="dot" aria-hidden="true"></span>
+        <span>
+          <b>The office</b>
+          <span>Portsoken House, 155–157 Minories, EC3N 1LJ</span>
+        </span>
+      </div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="explore" aria-selected="true">Explore<span class="n" id="tab-n-explore"></span></button>
+      <button class="tab" role="tab" data-tab="compare" aria-selected="false">Shortlist<span class="n" id="tab-n-short"></span></button>
+      <button class="tab" role="tab" data-tab="map" aria-selected="false">Time map</button>
+      <button class="tab" role="tab" data-tab="method" aria-selected="false">How this works</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="panel-explore">
+    <div class="cols">
+      <aside class="console">
+          <details id="ctlToggle" open>
+            <summary><span>Filters &amp; priorities</span><span class="chev" aria-hidden="true">▾</span></summary>
+            <div id="console"></div>
+          </details>
+        </aside>
+      <main>
+        <div class="resbar">
+          <div class="eyebrow" id="resultCount">&nbsp;</div>
+          <div style="display:flex; gap:8px; align-items:center">
+            <span class="eyebrow">Sort</span>
+            <select id="sortSel" style="width:auto">
+              <option value="match">Best overall match</option>
+              <option value="time">Fastest door to door</option>
+              <option value="parking">Easiest parking</option>
+              <option value="walk">Most walkable</option>
+              <option value="green">Most green space</option>
+              <option value="rent">Cheapest rent</option>
+            </select>
+          </div>
+        </div>
+        <div class="results" id="results"></div>
+      </main>
+    </div>
+  </div>
+
+  <div id="panel-compare" hidden style="margin-top:22px"></div>
+  <div id="panel-map" hidden style="margin-top:22px"></div>
+  <div id="panel-method" hidden style="margin-top:22px"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================================
+   1. THE NETWORK
+   Lines are coloured with their real TfL / operator colours, because the colour
+   is doing information work here: it tells you which train you would actually be on.
+   ========================================================================== */
+const LINES = {
+  central:   { name:"Central line",      c:"#DC241F" },
+  elizabeth: { name:"Elizabeth line",    c:"#6950A1" },
+  district:  { name:"District line",     c:"#007D32" },
+  hc:        { name:"Hammersmith & City",c:"#F589A6", dark:true },
+  met:       { name:"Metropolitan line", c:"#9B0056" },
+  circle:    { name:"Circle line",       c:"#FFC800", dark:true },
+  jubilee:   { name:"Jubilee line",      c:"#838D93" },
+  victoria:  { name:"Victoria line",     c:"#0098D4" },
+  dlr:       { name:"DLR",               c:"#00AFAD" },
+  weaver:    { name:"Weaver line",       c:"#823A62" },
+  windrush:  { name:"Windrush line",     c:"#ED8B00", dark:true },
+  c2c:       { name:"c2c",               c:"#0B7EA8" },
+  southeast: { name:"Southeastern",      c:"#3A6FB0" }
+};
+
+/* Where you get off, and how long the final walk to Portsoken House is.
+   This is the quiet lever nobody thinks about: arriving at Fenchurch Street
+   saves four minutes a day over Liverpool Street, every single day. */
+const TERMINI = {
+  aldgate:   { name:"Aldgate",           walk:3,  note:"Straight up Aldgate High Street" },
+  towergw:   { name:"Tower Gateway",     walk:4,  note:"Across Minories" },
+  fenchurch: { name:"Fenchurch Street",  walk:5,  note:"Down Coopers Row" },
+  aldgateE:  { name:"Aldgate East",      walk:6,  note:"West along Whitechapel High Street" },
+  towerhill: { name:"Tower Hill",        walk:6,  note:"North up Minories" },
+  liverpool: { name:"Liverpool Street",  walk:9,  note:"South through Aldgate" },
+  cannon:    { name:"Cannon Street",     walk:14, note:"East along Eastcheap" }
+};
+
+/* ============================================================================
+   2. THE AREAS
+   ride  = scheduled in-carriage minutes
+   head  = typical peak headway in minutes (drives the platform wait)
+   ch    = number of interchanges
+   brg   = rough compass bearing from Aldgate, used by the time map
+   Scores are 1-5. Rents are typical asking for a 2-bed; buy is a 3-bed house
+   (or the nearest equivalent where houses are scarce).
+   ========================================================================== */
+const AREAS = [
+/* --- Central line, the Epping Forest side ------------------------------- */
+{id:"wanstead", name:"Wanstead", loc:"E11 · Redbridge", stn:"Wanstead", legs:[{line:"central", ride:20}], term:"liverpool", head:4, ch:0, brg:42, lat:51.5775, lon:0.0288, corr:"central-hainault",
+ parking:4, walk:5, green:5, amen:4, rent:1900, buy:700000,
+ vibe:"The strongest all-rounder on this list: a genuine village high street on George Green, Epping Forest at the end of the road, and Victorian streets wide enough to park on.",
+ watch:"You pay for it — Wanstead is the priciest of the Redbridge Central-line stops, and the good streets go fast.",
+ park:"Wanstead Park, Wanstead Flats, Epping Forest"},
+
+{id:"snaresbrook", name:"Snaresbrook", loc:"E11 · Redbridge", stn:"Snaresbrook", legs:[{line:"central", ride:22}], term:"liverpool", head:4, ch:0, brg:38, lat:51.5808, lon:0.0216, corr:"central-epping",
+ parking:4, walk:3, green:5, amen:3, rent:1850, buy:725000,
+ vibe:"Wanstead's quieter neighbour. Eagle Pond and the forest on the doorstep, big detached houses, and a station most people have never heard of.",
+ watch:"Almost no high street of its own — you walk or drive to Wanstead or South Woodford for anything.",
+ park:"Eagle Pond, Epping Forest, Hollow Ponds"},
+
+{id:"southwoodford", name:"South Woodford", loc:"E18 · Redbridge", stn:"South Woodford", legs:[{line:"central", ride:24}], term:"liverpool", head:4, ch:0, brg:35, lat:51.5917, lon:0.0275, corr:"central-epping",
+ parking:5, walk:4, green:4, amen:4, rent:1800, buy:680000,
+ vibe:"Driveways are standard rather than lucky. George Lane has the cafés and the Sainsbury's, and the forest is a ten-minute walk north.",
+ watch:"The A406 North Circular cuts through — check which side of it a property sits on before you fall in love with it.",
+ park:"Epping Forest, Ray Park, Elmhurst Gardens"},
+
+{id:"woodford", name:"Woodford", loc:"IG8 · Redbridge", stn:"Woodford", legs:[{line:"central", ride:26}], term:"liverpool", head:5, ch:0, brg:33, lat:51.607, lon:0.0341, corr:"central-epping",
+ parking:5, walk:3, green:5, amen:3, rent:1750, buy:675000,
+ vibe:"Woodford Green is properly leafy — cricket on the green, forest on three sides, and the easiest parking of any Central-line stop this close in.",
+ watch:"Spread out and car-dependent for shopping; the station is a hike from much of the housing stock.",
+ park:"Epping Forest, Woodford Green, Highams Park Lake"},
+
+{id:"leytonstone", name:"Leytonstone", loc:"E11 · Waltham Forest", stn:"Leytonstone", legs:[{line:"central", ride:19}], term:"liverpool", head:3, ch:0, brg:32, lat:51.5683, lon:0.0083, corr:"central-epping",
+ parking:3, walk:4, green:4, amen:4, rent:1700, buy:575000,
+ vibe:"Francis Road and Church Lane have quietly become one of east London's better café strips, with Hollow Ponds and Wanstead Flats a short walk away.",
+ watch:"Controlled parking across much of it, and the streets nearest the station are tight.",
+ park:"Wanstead Flats, Hollow Ponds, Epping Forest"},
+
+{id:"gantshill", name:"Gants Hill", loc:"IG2 · Redbridge", stn:"Gants Hill", legs:[{line:"central", ride:24}], term:"liverpool", head:5, ch:0, brg:50, lat:51.5765, lon:0.0663, corr:"central-hainault",
+ parking:4, walk:3, green:4, amen:3, rent:1550, buy:560000,
+ vibe:"Valentines Park is one of the best parks in outer London and barely anyone outside Ilford talks about it. Solid family housing, sensible prices.",
+ watch:"The Gants Hill roundabout is a genuinely unpleasant piece of road to live beside.",
+ park:"Valentines Park, Wanstead Park, Claybury Park"},
+
+{id:"redbridge", name:"Redbridge", loc:"IG4 · Redbridge", stn:"Redbridge", legs:[{line:"central", ride:22}], term:"liverpool", head:5, ch:0, brg:45, lat:51.5763, lon:0.0454, corr:"central-hainault",
+ parking:5, walk:3, green:4, amen:2, rent:1600, buy:600000,
+ vibe:"Wide inter-war streets, garages and driveways almost everywhere, and Wanstead Park a walk away. Purely residential.",
+ watch:"Thin on shops and places to eat — this is a commute-and-park choice, not a walkable-life choice.",
+ park:"Wanstead Park, Valentines Park, Roding Valley"},
+
+{id:"buckhursthill", name:"Buckhurst Hill", loc:"IG9 · Epping Forest", stn:"Buckhurst Hill", legs:[{line:"central", ride:30}], term:"liverpool", head:6, ch:0, brg:28, lat:51.6266, lon:0.0471, corr:"central-epping",
+ parking:5, walk:4, green:5, amen:3, rent:1900, buy:760000,
+ vibe:"Queen's Road is a genuinely nice boutique high street and the forest is immediate. Essex-adjacent in the good way.",
+ watch:"Over the 45 on a normal day. Also outside London for council tax and school catchments.",
+ park:"Epping Forest, Roding Valley Meadows, Knighton Wood"},
+
+/* --- Overground: Weaver line into Liverpool Street ---------------------- */
+{id:"walthamstow", name:"Walthamstow Central", loc:"E17 · Waltham Forest", stn:"Walthamstow Central", legs:[{line:"weaver", ride:15}], term:"liverpool", head:8, ch:0, brg:8, lat:51.5829, lon:-0.0197, corr:"weaver-chingford",
+ parking:3, walk:5, green:5, amen:5, rent:1850, buy:650000,
+ vibe:"Probably the best amenity-to-price ratio in this whole list. The Village, Lloyd Park, the Wetlands, the market, and a Victoria line escape hatch if the Overground sulks.",
+ watch:"Parking is the weak spot — most of it is controlled, and permits are priced on emissions. Check your car's band before committing.",
+ park:"Lloyd Park, Walthamstow Wetlands, Epping Forest edge"},
+
+{id:"stjames", name:"St James Street", loc:"E17 · Waltham Forest", stn:"St James Street", legs:[{line:"weaver", ride:13}], term:"liverpool", head:8, ch:0, brg:5, lat:51.5827, lon:-0.0335, corr:"weaver-chingford",
+ parking:3, walk:4, green:4, amen:4, rent:1700, buy:560000,
+ vibe:"Walthamstow's cheaper half, with the Wetlands and the Blackhorse Lane breweries within walking distance and the same trains.",
+ watch:"Rougher around the edges than the Village end, and the same controlled-parking problem.",
+ park:"Walthamstow Wetlands, Lloyd Park, St James Park"},
+
+{id:"woodstreet", name:"Wood Street", loc:"E17 · Waltham Forest", stn:"Wood Street", legs:[{line:"weaver", ride:18}], term:"liverpool", head:10, ch:0, brg:18, lat:51.5866, lon:-0.0012, corr:"weaver-chingford",
+ parking:4, walk:3, green:4, amen:3, rent:1600, buy:570000,
+ vibe:"Quieter, more houses than flats, forest at the top of the hill, and a small parade with an unreasonably good indoor market.",
+ watch:"Fewer trains than Walthamstow Central and no tube backup if the line goes down.",
+ park:"Epping Forest, Lloyd Park, Higham Hill Rec"},
+
+{id:"highamspark", name:"Highams Park", loc:"E4 · Waltham Forest", stn:"Highams Park", legs:[{line:"weaver", ride:21}], term:"liverpool", head:12, ch:0, brg:15, lat:51.6086, lon:-0.0009, corr:"weaver-chingford",
+ parking:5, walk:4, green:5, amen:3, rent:1600, buy:585000,
+ vibe:"A lake, a chunk of Epping Forest, driveways as standard and a small high street that has grown up a lot. Quietly one of the best value-for-life picks here.",
+ watch:"Trains every 12–15 minutes rather than every 3 — miss one and you feel it. That platform wait is already in the number below.",
+ park:"Highams Park Lake, Epping Forest, Larkswood"},
+
+{id:"chingford", name:"Chingford", loc:"E4 · Waltham Forest", stn:"Chingford", legs:[{line:"weaver", ride:26}], term:"liverpool", head:12, ch:0, brg:12, lat:51.6329, lon:0.0089, corr:"weaver-chingford",
+ parking:5, walk:4, green:5, amen:3, rent:1650, buy:600000,
+ vibe:"Forest on the doorstep in a way nowhere else on this list can match, proper houses with drives, and a station you can get a seat at because it's the terminus.",
+ watch:"Comes out just over the 45 once you add the platform wait and the walk from Liverpool Street. Worth a real-world test run before you rule it in or out.",
+ park:"Epping Forest, Ridgeway Park, Chingford Plain"},
+
+{id:"stokenewington", name:"Stoke Newington", loc:"N16 · Hackney", stn:"Stoke Newington", legs:[{line:"weaver", ride:12}], term:"liverpool", head:8, ch:0, brg:350, lat:51.5606, lon:-0.0729, corr:"weaver-enfield",
+ parking:1, walk:5, green:5, amen:5, rent:2200, buy:850000,
+ vibe:"Church Street is one of the best walkable high streets in London, Clissold Park is lovely, and the commute is short.",
+ watch:"Parking here is genuinely painful — Hackney permits, narrow Victorian streets, high demand. If the car is non-negotiable, this is the wrong postcode.",
+ park:"Clissold Park, Abney Park Cemetery, Springfield Park"},
+
+{id:"bushhill", name:"Bush Hill Park", loc:"EN1 · Enfield", stn:"Bush Hill Park", legs:[{line:"weaver", ride:24}], term:"liverpool", head:15, ch:0, brg:355, lat:51.641, lon:-0.068, corr:"weaver-enfield",
+ parking:5, walk:3, green:4, amen:3, rent:1500, buy:520000,
+ vibe:"Big Edwardian houses for the money, wide streets, and Enfield Town's shops a short hop away.",
+ watch:"Infrequent trains push it past the limit, and it's a long way from anyone you know in east London.",
+ park:"Bush Hill Park, Town Park, Lee Valley"},
+
+/* --- c2c into Fenchurch Street: the five-minute-walk trick --------------- */
+{id:"upminster", name:"Upminster", loc:"RM14 · Havering", stn:"Upminster", legs:[{line:"c2c", ride:22}], term:"fenchurch", head:8, ch:0, brg:78, lat:51.5589, lon:0.251, corr:"c2c",
+ parking:5, walk:4, green:4, amen:4, rent:1600, buy:575000,
+ vibe:"The surprise of the whole exercise. Twenty-two minutes to Fenchurch Street and then a five-minute walk — so a town at the far edge of the map lands inside the limit with room to spare. Driveways everywhere, a real high street, and the District line as backup.",
+ watch:"It is a long way out. Everything social becomes a planned trip rather than a spontaneous one.",
+ park:"Upminster Park, Hornchurch Country Park, Upminster Windmill"},
+
+{id:"barking", name:"Barking", loc:"IG11 · Barking & Dagenham", stn:"Barking", legs:[{line:"c2c", ride:15}], term:"fenchurch", head:10, ch:0, brg:80, lat:51.5394, lon:0.081, corr:"c2c",
+ parking:3, walk:3, green:3, amen:3, rent:1500, buy:450000,
+ vibe:"Four different ways into town from one station, serious regeneration money, and the cheapest fast commute on this list.",
+ watch:"The town centre is a work in progress and the housing stock nearest the station is mostly flats.",
+ park:"Barking Park, Abbey Green, Eastbrookend Country Park"},
+
+{id:"dagenhamheathway", name:"Dagenham Heathway", loc:"RM9 · Barking & Dagenham", stn:"Dagenham Heathway", legs:[{line:"district", ride:27}], term:"aldgateE", head:5, ch:0, brg:82, lat:51.5417, lon:0.147, corr:"district-east",
+ parking:5, walk:3, green:4, amen:3, rent:1350, buy:400000,
+ vibe:"The best pounds-per-square-foot on this list by a distance. Becontree estate houses with gardens and off-street parking, and a direct District line train.",
+ watch:"Amenities are functional rather than charming, and the District line is slow and can be crowded by the time it reaches you.",
+ park:"Central Park, Old Dagenham Park, Eastbrookend"},
+
+{id:"eastham", name:"East Ham", loc:"E6 · Newham", stn:"East Ham", legs:[{line:"district", ride:18}], term:"aldgateE", head:4, ch:0, brg:76, lat:51.5386, lon:0.0518, corr:"district-east",
+ parking:2, walk:4, green:4, amen:4, rent:1550, buy:470000,
+ vibe:"High Street North is one of the liveliest and best-value shopping streets in London, and Central Park is bigger than people expect.",
+ watch:"Parking pressure is high and much of it is controlled — this is the main thing to check street by street.",
+ park:"Central Park, Plashet Park, Wanstead Flats"},
+
+/* --- District line, close in -------------------------------------------- */
+{id:"mileend", name:"Mile End", loc:"E3 · Tower Hamlets", stn:"Mile End", legs:[{line:"district", ride:5}], term:"aldgateE", head:3, ch:0, brg:62, lat:51.5252, lon:-0.0334, corr:"district-east",
+ parking:1, walk:5, green:5, amen:4, rent:2100, buy:650000,
+ vibe:"Twenty-two minutes door to door, Victoria Park and Mile End Park either side of you, and the canal to walk along. On commute and walkability alone it wins outright.",
+ watch:"Parking is the deal-breaker: Tower Hamlets controlled zones, very high demand, almost no off-street. Only workable if you'd consider giving up the car.",
+ park:"Victoria Park, Mile End Park, Regent's Canal"},
+
+{id:"bowroad", name:"Bow Road", loc:"E3 · Tower Hamlets", stn:"Bow Road", legs:[{line:"district", ride:7}], term:"aldgateE", head:3, ch:0, brg:65, lat:51.5269, lon:-0.025, corr:"district-east",
+ parking:2, walk:4, green:5, amen:4, rent:1950, buy:600000,
+ vibe:"Roman Road market, Victoria Park a walk north, and a commute short enough to come home for lunch.",
+ watch:"Same parking problem as Mile End, slightly less acute. Some of the Victorian terraces do have hardstanding.",
+ park:"Victoria Park, Mile End Park, Bow Creek"},
+
+/* --- Elizabeth line, east ------------------------------------------------ */
+{id:"stratford", name:"Stratford", loc:"E15/E20 · Newham", stn:"Stratford", legs:[{line:"elizabeth", ride:7}], term:"liverpool", head:4, ch:0, brg:58, lat:51.5416, lon:-0.0035, corr:"elizabeth-east",
+ parking:3, walk:4, green:5, amen:5, rent:2200, buy:600000,
+ vibe:"Twenty-six minutes door to door, the Olympic Park on your doorstep, and more shops, pools and cinemas than anywhere else in east London.",
+ watch:"Mostly new-build flats. Allocated parking exists but is often sold or rented separately and priced accordingly.",
+ park:"Queen Elizabeth Olympic Park, West Ham Park, Wanstead Flats"},
+
+{id:"forestgate", name:"Forest Gate", loc:"E7 · Newham", stn:"Forest Gate", legs:[{line:"elizabeth", ride:10}], term:"liverpool", head:4, ch:0, brg:68, lat:51.5495, lon:0.0243, corr:"elizabeth-east",
+ parking:3, walk:5, green:5, amen:4, rent:1750, buy:560000,
+ vibe:"Woodgrange Road has transformed, the Woodgrange conservation area is full of beautiful terraces, and Wanstead Flats is right there. Twenty-nine minutes door to door.",
+ watch:"Controlled parking in the streets nearest the station; the conservation-area houses rarely have off-street space.",
+ park:"Wanstead Flats, West Ham Park, Epping Forest"},
+
+{id:"manorpark", name:"Manor Park", loc:"E12 · Newham", stn:"Manor Park", legs:[{line:"elizabeth", ride:12}], term:"liverpool", head:4, ch:0, brg:72, lat:51.5527, lon:0.0463, corr:"elizabeth-east",
+ parking:3, walk:3, green:4, amen:3, rent:1500, buy:480000,
+ vibe:"Forest Gate's commute for meaningfully less money, with Wanstead Flats equally close.",
+ watch:"The high street hasn't caught up with the Elizabeth line yet. Prices are climbing regardless.",
+ park:"Wanstead Flats, Manor Park Rec, City of London Cemetery"},
+
+{id:"ilford", name:"Ilford", loc:"IG1 · Redbridge", stn:"Ilford", legs:[{line:"elizabeth", ride:16}], term:"liverpool", head:4, ch:0, brg:74, lat:51.559, lon:0.0693, corr:"elizabeth-east",
+ parking:3, walk:4, green:4, amen:4, rent:1550, buy:450000,
+ vibe:"Thirty-five minutes door to door, Valentines Park on the doorstep, a full-size town centre, and prices that haven't fully absorbed the Elizabeth line yet.",
+ watch:"The centre is busy and a bit worn; the nice bits are the streets around Valentines Park and Cranbrook.",
+ park:"Valentines Park, Seven Kings Park, Goodmayes Park"},
+
+{id:"goodmayes", name:"Goodmayes", loc:"IG3 · Redbridge", stn:"Goodmayes", legs:[{line:"elizabeth", ride:19}], term:"liverpool", head:5, ch:0, brg:76, lat:51.5653, lon:0.1119, corr:"elizabeth-east",
+ parking:4, walk:3, green:4, amen:3, rent:1450, buy:470000,
+ vibe:"Semi-detached houses with drives, a decent park, and a 38-minute commute. Unglamorous and very good value.",
+ watch:"Suburban in the sleepy sense — you'd be going to Ilford or Wanstead for an evening out.",
+ park:"Goodmayes Park, Valentines Park, Seven Kings Park"},
+
+{id:"chadwellheath", name:"Chadwell Heath", loc:"RM6 · Barking & Dagenham", stn:"Chadwell Heath", legs:[{line:"elizabeth", ride:21}], term:"liverpool", head:5, ch:0, brg:77, lat:51.5682, lon:0.1305, corr:"elizabeth-east",
+ parking:5, walk:3, green:3, amen:3, rent:1400, buy:460000,
+ vibe:"Off-street parking almost guaranteed, forty minutes door to door, and among the lowest prices anywhere inside the limit.",
+ watch:"Least characterful of the Elizabeth line options — the high street is thin.",
+ park:"Goodmayes Park, Eastbrookend Country Park, Central Park"},
+
+{id:"romford", name:"Romford", loc:"RM1 · Havering", stn:"Romford", legs:[{line:"elizabeth", ride:24}], term:"liverpool", head:5, ch:0, brg:78, lat:51.5748, lon:0.1834, corr:"elizabeth-east",
+ parking:4, walk:4, green:4, amen:5, rent:1500, buy:480000,
+ vibe:"A proper town rather than a suburb — market since 1247, The Brewery retail park, Raphael Park, and everything open on a Sunday.",
+ watch:"Town centre is loud on a Friday night. Aim for the streets around Raphael Park or Gidea Park instead.",
+ park:"Raphael Park, Lodge Farm Park, Bedfords Park"},
+
+{id:"gideapark", name:"Gidea Park", loc:"RM2 · Havering", stn:"Gidea Park", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:5, ch:0, brg:79, lat:51.5807, lon:0.2072, corr:"elizabeth-east",
+ parking:5, walk:4, green:4, amen:3, rent:1650, buy:600000,
+ vibe:"The Garden Suburb is genuinely special — Arts and Crafts houses built for a 1911 exhibition, huge plots, mature trees. Raphael Park and a small parade of shops on Balgores Lane.",
+ watch:"Lands right on the 45-minute line, so a slow train or a long platform wait tips it over. The good houses are expensive for Havering.",
+ park:"Raphael Park, Gidea Park, Bedfords Park"},
+
+/* --- Elizabeth line, south-east ----------------------------------------- */
+{id:"woolwich", name:"Woolwich", loc:"SE18 · Greenwich", stn:"Woolwich", legs:[{line:"elizabeth", ride:22}], term:"liverpool", head:5, ch:0, brg:108, lat:51.4917, lon:0.07, corr:"elizabeth-se",
+ parking:4, walk:4, green:4, amen:4, rent:1750, buy:470000,
+ vibe:"Royal Arsenal is a handsome bit of riverside regeneration with actual allocated parking, and the Elizabeth line changed the maths here completely.",
+ watch:"Quality varies sharply street to street once you leave the Arsenal and the common.",
+ park:"Woolwich Common, Maryon Park, Charlton Park"},
+
+{id:"abbeywood", name:"Abbey Wood", loc:"SE2 · Bexley/Greenwich", stn:"Abbey Wood", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:6, ch:0, brg:106, lat:51.4907, lon:0.12, corr:"elizabeth-se",
+ parking:5, walk:3, green:5, amen:3, rent:1550, buy:430000,
+ vibe:"Lesnes Abbey Woods is a proper ancient woodland with a ruined abbey in it, and the housing comes with drives and garages at prices that look like a misprint.",
+ watch:"Amenities are limited and it feels a long way from the rest of London socially.",
+ park:"Lesnes Abbey Woods, Bostall Woods, Southmere Park"},
+
+/* --- DLR into Tower Gateway --------------------------------------------- */
+{id:"greenwich", name:"Greenwich", loc:"SE10 · Greenwich", stn:"Greenwich", legs:[{line:"dlr", ride:22}], term:"towergw", head:6, ch:0, brg:122, lat:51.4781, lon:-0.0149, corr:"dlr-se",
+ parking:2, walk:5, green:5, amen:5, rent:2000, buy:700000,
+ vibe:"Greenwich Park is world class, the market and the town centre are lovely to walk around, and the DLR drops you four minutes from the office door.",
+ watch:"Parking is the catch — controlled zones, tourist pressure, and Georgian terraces with no off-street space.",
+ park:"Greenwich Park, Blackheath, Greenwich Peninsula Ecology Park"},
+
+{id:"lewisham", name:"Lewisham", loc:"SE13 · Lewisham", stn:"Lewisham", legs:[{line:"dlr", ride:26}], term:"towergw", head:6, ch:0, brg:135, lat:51.4657, lon:-0.0142, corr:"dlr-se",
+ parking:3, walk:4, green:4, amen:4, rent:1700, buy:520000,
+ vibe:"Better value than Greenwich next door, with Manor House Gardens and Ladywell Fields, and both the DLR and fast trains to town.",
+ watch:"The centre is dominated by the shopping centre and the roundabout; the charm is in the side streets.",
+ park:"Manor House Gardens, Ladywell Fields, Hilly Fields"},
+
+{id:"blackheath", name:"Blackheath", loc:"SE3 · Greenwich/Lewisham", stn:"Blackheath", legs:[{line:"southeast", ride:17}], term:"cannon", head:10, ch:0, brg:125, lat:51.4657, lon:0.009, corr:"southeastern",
+ parking:4, walk:5, green:5, amen:4, rent:2000, buy:800000,
+ vibe:"The village is beautiful, the Heath is enormous and Greenwich Park is over the hill. One of the few places on this list with both walkability and workable parking.",
+ watch:"Expensive, and the fourteen-minute walk from Cannon Street eats most of the advantage of a fast train. Check the numbers carefully.",
+ park:"Blackheath, Greenwich Park, Sutcliffe Park"},
+
+/* --- Windrush line via Whitechapel -------------------------------------- */
+{id:"canadawater", name:"Canada Water", loc:"SE16 · Southwark", stn:"Canada Water", legs:[{line:"windrush", ride:6},{line:"district", ride:2}], term:"aldgateE", head:5, ch:1, brg:165, lat:51.498, lon:-0.0498, corr:"windrush",
+ parking:3, walk:4, green:4, amen:4, rent:2100, buy:600000,
+ vibe:"Thirty minutes door to door, a huge new town centre being built, docks and woodland walks, and new blocks that actually come with parking spaces.",
+ watch:"A building site for the next few years, and you pay new-build prices.",
+ park:"Southwark Park, Russia Dock Woodland, Stave Hill"},
+
+{id:"brockley", name:"Brockley", loc:"SE4 · Lewisham", stn:"Brockley", legs:[{line:"windrush", ride:16},{line:"district", ride:2}], term:"aldgateE", head:8, ch:1, brg:178, lat:51.4646, lon:-0.0374, corr:"windrush",
+ parking:3, walk:4, green:4, amen:4, rent:1750, buy:620000,
+ vibe:"Hilly Fields is a genuinely special park with a view over London, and Brockley Road has the delis and the good pub without being precious about it.",
+ watch:"One change at Whitechapel, and the conservation-area terraces mostly park on the street.",
+ park:"Hilly Fields, Ladywell Fields, Telegraph Hill"},
+
+{id:"foresthill", name:"Forest Hill", loc:"SE23 · Lewisham", stn:"Forest Hill", legs:[{line:"windrush", ride:20},{line:"district", ride:2}], term:"aldgateE", head:8, ch:1, brg:190, lat:51.4392, lon:-0.0532, corr:"windrush",
+ parking:4, walk:5, green:5, amen:4, rent:1800, buy:640000,
+ vibe:"The Horniman Museum gardens are free, extraordinary, and effectively your local park. The high street has real independents and the streets are wide with front drives.",
+ watch:"Sits right on the limit because of the change at Whitechapel — and it's the far side of London from the Essex family orbit.",
+ park:"Horniman Gardens, Sydenham Hill Wood, Mayow Park"},
+
+/* --- Metropolitan line: no change at all -------------------------------- */
+{id:"wembleypark", name:"Wembley Park", loc:"HA9 · Brent", stn:"Wembley Park", legs:[{line:"met", ride:28}], term:"aldgate", head:6, ch:0, brg:300, lat:51.5635, lon:-0.2795, corr:"met-nw",
+ parking:4, walk:4, green:3, amen:4, rent:1800, buy:520000,
+ vibe:"The Metropolitan line runs into Aldgate itself, so you step off the train three minutes from the door with no changes at all. Wembley Park has been rebuilt with shops, a park and secure parking.",
+ watch:"Event days at the stadium make the area completely impassable roughly thirty times a year.",
+ park:"King Edward VII Park, Barham Park, Fryent Country Park"},
+
+{id:"prestonroad", name:"Preston Road", loc:"HA9 · Brent", stn:"Preston Road", legs:[{line:"met", ride:30}], term:"aldgate", head:8, ch:0, brg:302, lat:51.5723, lon:-0.2954, corr:"met-nw",
+ parking:5, walk:3, green:4, amen:3, rent:1600, buy:560000,
+ vibe:"Quiet inter-war semis with garages, a direct no-change run to Aldgate, and Fryent Country Park's hills five minutes away.",
+ watch:"Small parade of shops only, and some Metropolitan services terminate at Baker Street rather than running through — check the boards.",
+ park:"Preston Park, Fryent Country Park, Barham Park"},
+
+{id:"harrowonthehill", name:"Harrow-on-the-Hill", loc:"HA1 · Harrow", stn:"Harrow-on-the-Hill", legs:[{line:"met", ride:32}], term:"aldgate", head:6, ch:0, brg:295, lat:51.5793, lon:-0.337, corr:"met-nw",
+ parking:5, walk:4, green:4, amen:4, rent:1700, buy:600000,
+ vibe:"The Hill itself is a beautiful old village above a full-size town centre, with fast Metropolitan trains running straight into Aldgate.",
+ watch:"Only the fast trains make the time work — the all-stations service adds ten minutes. Just over the limit as scored.",
+ park:"Harrow Recreation Ground, Northwick Park, Harrow Hill"},
+
+{id:"finchleyroad", name:"Finchley Road", loc:"NW3 · Camden", stn:"Finchley Road", legs:[{line:"met", ride:18}], term:"aldgate", head:4, ch:0, brg:310, lat:51.5472, lon:-0.1803, corr:"met-nw",
+ parking:2, walk:5, green:5, amen:5, rent:2400, buy:900000,
+ vibe:"Thirty-one minutes with no changes, Hampstead Heath a walk away, and both the Metropolitan and Jubilee lines if one fails.",
+ watch:"The most expensive area on this list, and Camden parking permits with very little off-street space.",
+ park:"Hampstead Heath, Regent's Park, Golders Hill Park"},
+
+/* --- Elizabeth line, west ----------------------------------------------- */
+{id:"ealingbroadway", name:"Ealing Broadway", loc:"W5 · Ealing", stn:"Ealing Broadway", legs:[{line:"elizabeth", ride:21}], term:"liverpool", head:5, ch:0, brg:275, lat:51.5152, lon:-0.3017, corr:"elizabeth-west",
+ parking:3, walk:5, green:5, amen:5, rent:2100, buy:750000,
+ vibe:"Queen of the Suburbs, and it earns it: Walpole Park, Haven Green, a real high street, and 41 minutes door to door on the Elizabeth line.",
+ watch:"Expensive, and it puts you on the opposite side of London from east-London life.",
+ park:"Walpole Park, Lammas Park, Pitshanger Park"},
+
+{id:"actonmainline", name:"Acton Main Line", loc:"W3 · Ealing", stn:"Acton Main Line", legs:[{line:"elizabeth", ride:18}], term:"liverpool", head:5, ch:0, brg:278, lat:51.517, lon:-0.2678, corr:"elizabeth-west",
+ parking:3, walk:4, green:4, amen:4, rent:1900, buy:620000,
+ vibe:"Ealing's commute for less money, with Acton Park and a high street that has improved a lot since the Elizabeth line opened.",
+ watch:"Acton is a collection of very different neighbourhoods — walk the specific streets before deciding.",
+ park:"Acton Park, Springfield Gardens, Gunnersbury Park"},
+
+{id:"hanwell", name:"Hanwell", loc:"W7 · Ealing", stn:"Hanwell", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:6, ch:0, brg:272, lat:51.5119, lon:-0.3387, corr:"elizabeth-west",
+ parking:4, walk:4, green:5, amen:3, rent:1750, buy:620000,
+ vibe:"A village feel with the Brent River Park, Elthorne Park and the Wharncliffe Viaduct, plus houses that mostly have somewhere to put a car.",
+ watch:"Comes out just over the limit, and Ealing Broadway is where you go for anything substantial.",
+ park:"Brent River Park, Elthorne Park, Bunny Park"}
+];
+</script>
+
+<script>
+"use strict";
+
+/* ============================================================================
+   3. STATE
+   ========================================================================== */
+const DEFAULTS = {
+  target: 45,        // the door-to-door ceiling, in minutes
+  walkMins: 8,       // walk from front door to home station
+  changeMins: 5,     // penalty per interchange
+  needParking: false,
+  showOver: true,   // keep near-misses visible rather than silently hiding them
+  maxRent: 2400,
+  sort: "match",
+  mapView: "geo",   // "geo" = real geography, "time" = the polar isochrone
+  labelAll: false,
+  weights: { commute:5, parking:4, walk:4, green:4, amen:3, value:3 }
+};
+const WEIGHT_META = [
+  ["commute","Short commute"], ["parking","Parking for the car"], ["walk","Walkable streets"],
+  ["green","Parks and green space"], ["amen","Shops, cafés, life"], ["value","Value for money"]
+];
+const SCALE_MAX = 60;   // every journey strip is drawn on this shared 0–60 min scale
+
+let state = load();
+let shortlist = loadList();
+let tab = "explore";
+
+function load(){
+  try { const r = localStorage.getItem("aldgate.state");
+        if(r) return Object.assign({}, DEFAULTS, JSON.parse(r), {weights: Object.assign({}, DEFAULTS.weights, (JSON.parse(r).weights||{}))});
+  } catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+function loadList(){ try { return JSON.parse(localStorage.getItem("aldgate.shortlist")||"[]"); } catch(e){ return []; } }
+function save(){
+  try { localStorage.setItem("aldgate.state", JSON.stringify(state));
+        localStorage.setItem("aldgate.shortlist", JSON.stringify(shortlist)); } catch(e){}
+}
+
+/* ============================================================================
+   4. THE COMMUTE MODEL
+   door-to-door = walk to station + platform wait + time on train
+                  + interchange penalty + walk from arrival station to the office
+   Every one of those five is a real cost, and four of them are invisible on a
+   train timetable. That is precisely why "22 minutes to London" is a lie.
+   ========================================================================== */
+function journey(a){
+  const segs = [];
+  segs.push({ kind:"walk",  mins:state.walkMins, label:"Walk", detail:"Front door to "+a.stn+" station" });
+
+  const wait = Math.max(1, Math.min(Math.round(a.head/2), 8));
+  segs.push({ kind:"wait", mins:wait, label:"Wait", detail:"Typical wait — trains about every "+a.head+" min at peak" });
+
+  a.legs.forEach((leg,i) => {
+    if(i > 0) segs.push({ kind:"change", mins:state.changeMins, label:"Change", detail:"Interchange at Whitechapel" });
+    const L = LINES[leg.line];
+    segs.push({ kind:"ride", mins:leg.ride, label:L.name, colour:L.c, dark:!!L.dark,
+                detail:L.name+" — "+leg.ride+" min in the carriage" });
+  });
+
+  const t = TERMINI[a.term];
+  segs.push({ kind:"walk", mins:t.walk, label:"Walk", detail:t.note+" — "+t.walk+" min from "+t.name+" to the office" });
+
+  const total = segs.reduce((s,x)=>s+x.mins, 0);
+  return { segs, total, badday: Math.round(total*1.15) + 4, term:t };
+}
+
+function verdict(total){
+  if(total <= state.target - 5) return { cls:"v-good",  text:"Comfortable", tone:"good" };
+  if(total <= state.target)     return { cls:"v-warn",  text:"Right on the limit", tone:"warn" };
+  return { cls:"v-bad", text:"Over by "+(total-state.target)+" min", tone:"bad" };
+}
+
+/* Weighted match. Each factor is scored 0–5, then weighted by how much you said
+   it matters. Reported as a percentage of the best you could possibly score. */
+function score(a, j){
+  const commute = j.total <= 25 ? 5
+                : j.total >= state.target + 12 ? 0
+                : 5 * (1 - (j.total - 25) / ((state.target + 12) - 25));
+  const value = a.rent <= 1400 ? 5
+              : a.rent >= 2400 ? 1
+              : 5 - 4 * (a.rent - 1400) / 1000;
+  const parts = { commute:Math.max(0,commute), parking:a.parking, walk:a.walk,
+                  green:a.green, amen:a.amen, value:Math.max(0,value) };
+  let got = 0, max = 0;
+  for(const [k] of WEIGHT_META){ const w = state.weights[k]; got += w * parts[k]; max += w * 5; }
+  return { pct: max ? Math.round(got / max * 100) : 0, parts };
+}
+
+function evaluate(){
+  return AREAS.map(a => {
+    const j = journey(a);
+    return { a, j, s: score(a, j), v: verdict(j.total) };
+  });
+}
+function passes(r){
+  if(r.j.total > state.target && !state.showOver) return false;
+  if(state.needParking && r.a.parking < 3) return false;
+  if(r.a.rent > state.maxRent) return false;
+  return true;
+}
+function sorted(rows){
+  const by = {
+    match:   (x,y) => y.s.pct - x.s.pct || x.j.total - y.j.total,
+    time:    (x,y) => x.j.total - y.j.total,
+    parking: (x,y) => y.a.parking - x.a.parking || x.j.total - y.j.total,
+    walk:    (x,y) => y.a.walk - x.a.walk || x.j.total - y.j.total,
+    green:   (x,y) => y.a.green - x.a.green || x.j.total - y.j.total,
+    rent:    (x,y) => x.a.rent - y.a.rent
+  }[state.sort] || ((x,y)=>y.s.pct-x.s.pct);
+  return rows.slice().sort(by);
+}
+
+/* ============================================================================
+   5. SMALL RENDER HELPERS
+   ========================================================================== */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = n => "£" + n.toLocaleString("en-GB");
+const kk = n => "£" + Math.round(n/1000) + "k";
+
+function dots(n, tone){
+  let h = '<div class="dots">';
+  for(let i=0;i<5;i++) h += '<span class="dot5'+(i<n?" on":"")+'"></span>';
+  return h + "</div>";
+}
+function traitCell(key, label, val, blurb){
+  const cls = val >= 4 ? " hi" : val <= 2 ? " lo" : "";
+  return '<div class="trait'+cls+'"><div class="k">'+label+'</div>'+dots(val)+
+         '<div class="v">'+esc(blurb)+'</div></div>';
+}
+const PARK_WORDS = ["","Very hard","Hard","Workable","Good","Easy — drives common"];
+const WALK_WORDS = ["","Car-dependent","Limited","Decent","Good","Excellent"];
+const GREEN_WORDS= ["","Very little","Limited","Decent","Good","Outstanding"];
+const AMEN_WORDS = ["","Very thin","Basic","Decent","Good","Everything you need"];
+
+/* The journey strip. Drawn on a shared 0–60 minute scale so that two cards can
+   be compared by eye alone, with a dashed line at your limit. */
+function strip(j){
+  const pc = m => (m / SCALE_MAX * 100);
+  let bars = "";
+  j.segs.forEach(s => {
+    const w = pc(s.mins);
+    const style = s.kind === "ride" ? 'background:'+s.colour+';' : '';
+    const show = w > 7 ? '<span class="lbl">'+s.mins+'</span>' : '';
+    bars += '<div class="seg '+s.kind+(s.dark?" dark":"")+'" style="width:'+w.toFixed(2)+'%;'+style+'" title="'+esc(s.label+" · "+s.mins+" min — "+s.detail)+'">'+show+'</div>';
+  });
+  const tpc = pc(state.target);
+  return '<div class="stripwrap">'+
+    '<div class="tmark" style="left:0">0</div>'+
+    '<div class="tmark t-target" style="left:'+tpc.toFixed(2)+'%">'+state.target+' min</div>'+
+    '<div class="tmark" style="left:100%; transform:translateX(-100%)">'+SCALE_MAX+'</div>'+
+    '<div class="strip">'+bars+
+      '<div class="target" style="left:'+tpc.toFixed(2)+'%"></div>'+
+    '</div></div>';
+}
+
+function routeLine(a, j){
+  let h = '<div class="route"><span class="lchip"><i style="background:var(--ink-3)"></i>'+esc(a.stn)+'</span>';
+  a.legs.forEach(leg => {
+    const L = LINES[leg.line];
+    h += '<span class="arrow">→</span><span class="lchip"><i style="background:'+L.c+'"></i>'+esc(L.name)+'</span>';
+  });
+  h += '<span class="arrow">→</span><span class="lchip"><i style="background:var(--accent)"></i>'+esc(j.term.name)+'</span>';
+  h += '<span class="arrow">→</span><span style="color:var(--ink-3)">'+j.term.walk+' min walk to the office</span>';
+  if(a.ch > 0) h += '<span style="color:var(--ink-4); font-size:12px">· '+a.ch+' change</span>';
+  return h + "</div>";
+}
+</script>
+
+<script>
+"use strict";
+
+/* ============================================================================
+   6. THE CONSOLE
+   ========================================================================== */
+function renderConsole(){
+  const c = document.getElementById("console");
+  c.innerHTML =
+  '<div class="panel"><header><span class="eyebrow">The hard limits</span></header><div class="body">'+
+    ctlRange("target","Door-to-door ceiling",state.target,30,60,1," min","The whole page is measured against this line. Drag it and everything re-ranks.")+
+    ctlRange("walkMins","Walk to your home station",state.walkMins,3,15,1," min","Applied to every area equally so the comparison is fair. Drop it to 5 to model buying nearer a station.")+
+    ctlRange("changeMins","Cost of each interchange",state.changeMins,2,10,1," min","Stairs, platform, and waiting for the next train.")+
+    ctlSwitch("needParking","Must have workable parking", state.needParking, "Hides anywhere parking is genuinely hard.")+
+    ctlSwitch("showOver","Show areas over the limit", state.showOver, "Near-misses are worth seeing rather than silently dropping.")+
+    ctlRange("maxRent","Rent ceiling (2-bed)",state.maxRent,1300,2500,50,"","")+
+  '</div></div>'+
+
+  '<div class="panel"><header><span class="eyebrow">What matters to you</span>'+
+    '<button class="btn small" id="resetW">Reset</button></header><div class="body"><div class="weights">'+
+    WEIGHT_META.map(([k,label]) =>
+      '<div class="wrow ctl"><label for="w-'+k+'">'+label+
+      '<span class="pips">'+[1,2,3,4,5].map(i=>'<span class="pip'+(i<=state.weights[k]?" on":"")+'"></span>').join("")+'</span></label>'+
+      '<input type="range" id="w-'+k+'" data-weight="'+k+'" min="0" max="5" step="1" value="'+state.weights[k]+'">'+
+      '</div>').join("")+
+  '</div></div></div>'+
+
+  '<div class="panel"><div class="body" style="gap:9px">'+
+    '<div class="eyebrow">Reading the strip</div>'+
+    '<div class="legend">'+
+      '<span><i class="seg walk" style="background:repeating-linear-gradient(135deg,var(--walkfill) 0 3px,transparent 3px 6px),var(--waitfill)"></i>Walking</span>'+
+      '<span><i style="background:var(--waitfill)"></i>On the platform</span>'+
+      '<span><i style="background:var(--central,#DC241F)"></i>On the train</span>'+
+      '<span><i style="background:var(--changefill)"></i>Changing</span>'+
+    '</div>'+
+    '<div class="ctl"><div class="hint">Train colours are the real line colours. Every strip is drawn on the same 0–'+SCALE_MAX+' minute scale, so you can compare two areas without reading a single number.</div></div>'+
+  '</div></div>';
+
+  c.querySelectorAll("input[type=range]").forEach(el => {
+    el.addEventListener("input", e => {
+      const w = e.target.dataset.weight;
+      if(w) state.weights[w] = +e.target.value; else state[e.target.id] = +e.target.value;
+      save(); renderConsole(); renderAll();
+    });
+  });
+  c.querySelectorAll("input[type=checkbox]").forEach(el => {
+    el.addEventListener("change", e => { state[e.target.id] = e.target.checked; save(); renderAll(); });
+  });
+  const rw = document.getElementById("resetW");
+  if(rw) rw.onclick = () => { state.weights = JSON.parse(JSON.stringify(DEFAULTS.weights)); save(); renderConsole(); renderAll(); };
+}
+function ctlRange(id,label,val,min,max,step,suffix,hint){
+  const shown = id === "maxRent" ? money(val) : val + suffix;
+  return '<div class="ctl"><label for="'+id+'">'+label+'<span class="val">'+shown+'</span></label>'+
+    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
+    (hint ? '<div class="hint">'+hint+'</div>' : '')+'</div>';
+}
+function ctlSwitch(id,label,on,hint){
+  return '<div class="ctl"><label class="switch" for="'+id+'">'+label+
+    '<input type="checkbox" id="'+id+'"'+(on?" checked":"")+'><span class="track"></span></label>'+
+    (hint ? '<div class="hint">'+hint+'</div>' : '')+'</div>';
+}
+
+/* ============================================================================
+   7. RESULT CARDS
+   ========================================================================== */
+function card(r, rank){
+  const {a, j, s, v} = r;
+  const on = shortlist.includes(a.id);
+  return '<article class="card'+(j.total > state.target ? " over" : "")+'">'+
+    '<div class="chead">'+
+      '<div class="who"><h3><span class="rank">'+String(rank).padStart(2,"0")+'</span>'+esc(a.name)+
+        '<span class="verdict '+v.cls+'">'+v.text+'</span></h3>'+
+        '<div class="loc">'+esc(a.loc)+' · from '+esc(a.stn)+'</div></div>'+
+      '<div class="timebox">'+
+        '<div class="big" style="color:var(--'+v.tone+')">'+j.total+'<small>min</small></div>'+
+        '<div class="matchwrap" title="Weighted match against your priorities">'+
+          '<div class="matchbar"><i style="width:'+s.pct+'%"></i></div>'+
+          '<span class="matchnum">'+s.pct+'% match</span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="strip-area">'+ strip(j) + routeLine(a, j) +
+      '<div class="legend"><span style="color:var(--ink-4)">Allow about '+j.badday+
+      ' min on a bad day (delays, a missed connection, weather).</span></div>'+
+    '</div>'+
+    '<div class="traits">'+
+      traitCell("parking","Parking",a.parking,PARK_WORDS[a.parking])+
+      traitCell("walk","Walkable",a.walk,WALK_WORDS[a.walk])+
+      traitCell("green","Green space",a.green,GREEN_WORDS[a.green])+
+      traitCell("amen","Amenities",a.amen,AMEN_WORDS[a.amen])+
+    '</div>'+
+    '<div class="notes">'+
+      '<div class="note"><b>The pitch</b><span>'+esc(a.vibe)+'</span></div>'+
+      '<div class="note"><b>Watch out</b><span>'+esc(a.watch)+'</span></div>'+
+      '<div class="note"><b>Parks</b><span>'+esc(a.park)+'</span></div>'+
+    '</div>'+
+    '<div class="cfoot">'+
+      '<div class="money"><span>Rent, 2-bed <b>'+money(a.rent)+'</b>/mo</span>'+
+      '<span>Buy, 3-bed <b>'+kk(a.buy)+'</b></span></div>'+
+      '<button class="star" data-star="'+a.id+'" aria-pressed="'+on+'">'+(on ? "★ On the shortlist" : "☆ Shortlist")+'</button>'+
+    '</div>'+
+  '</article>';
+}
+
+function renderResults(){
+  const all = evaluate();
+  const rows = sorted(all.filter(passes));
+  const host = document.getElementById("results");
+  if(!rows.length){
+    host.innerHTML = '<div class="empty"><h3>Nothing clears those constraints</h3>'+
+      '<p>Try raising the rent ceiling, allowing a longer walk to the station, or turning on “show areas over the limit”.</p></div>';
+  } else {
+    host.innerHTML = rows.map((r,i) => card(r, i+1)).join("");
+    host.querySelectorAll("[data-star]").forEach(b => b.onclick = () => toggleStar(b.dataset.star));
+  }
+  const inside = all.filter(r => r.j.total <= state.target).length;
+  document.getElementById("resultCount").textContent =
+    rows.length + " areas shown · " + inside + " of " + AREAS.length + " come in at or under " + state.target + " minutes";
+  document.getElementById("tab-n-explore").textContent = rows.length;
+  document.getElementById("tab-n-short").textContent = shortlist.length || "";
+}
+function toggleStar(id){
+  const i = shortlist.indexOf(id);
+  if(i >= 0) shortlist.splice(i,1);
+  else { if(shortlist.length >= 4) shortlist.shift(); shortlist.push(id); }
+  save(); renderAll();
+}
+
+/* ============================================================================
+   8. SHORTLIST — side by side, with the winner in each row picked out
+   ========================================================================== */
+function renderCompare(){
+  const host = document.getElementById("panel-compare");
+  const rows = evaluate().filter(r => shortlist.includes(r.a.id));
+  if(!rows.length){
+    host.innerHTML = '<div class="empty"><h3>Nothing shortlisted yet</h3>'+
+      '<p>Star up to four areas on the Explore tab and they will line up here, side by side.</p></div>';
+    return;
+  }
+  const R = (label, get, best) => {
+    const vals = rows.map(get);
+    let win = -1;
+    if(best === "low")  win = vals.indexOf(Math.min(...vals.map(v => typeof v === "number" ? v : Infinity)));
+    if(best === "high") win = vals.indexOf(Math.max(...vals.map(v => typeof v === "number" ? v : -Infinity)));
+    return '<tr><th>'+label+'</th>'+ vals.map((v,i) =>
+      '<td class="'+(typeof v === "number" ? "num " : "")+(i===win ? "best" : "")+'">'+
+      (typeof v === "number" ? v : v) + '</td>').join("") + '</tr>';
+  };
+  host.innerHTML =
+    '<div class="resbar"><div class="eyebrow">'+rows.length+' shortlisted · green marks the best in each row</div>'+
+    '<button class="btn small" id="clearList">Clear shortlist</button></div>'+
+    '<div class="tablewrap"><table><thead><tr><th></th>'+
+      rows.map(r => '<th>'+esc(r.a.name)+'<div style="font-weight:400; font-size:12px; color:var(--ink-3)">'+esc(r.a.loc)+'</div></th>').join("")+
+    '</tr></thead><tbody>'+
+      R("Door to door (min)", r => r.j.total, "low")+
+      R("On a bad day (min)", r => r.j.badday, "low")+
+      R("Time on the train",  r => r.a.legs.reduce((s,l)=>s+l.ride,0), "low")+
+      R("Walk at the London end", r => r.j.term.walk, "low")+
+      R("Changes",            r => r.a.ch, "low")+
+      R("Match to priorities (%)", r => r.s.pct, "high")+
+      R("Parking (1–5)",      r => r.a.parking, "high")+
+      R("Walkability (1–5)",  r => r.a.walk, "high")+
+      R("Green space (1–5)",  r => r.a.green, "high")+
+      R("Amenities (1–5)",    r => r.a.amen, "high")+
+      R("Rent, 2-bed (£/mo)", r => r.a.rent, "low")+
+      R("Buy, 3-bed (£000s)", r => Math.round(r.a.buy/1000), "low")+
+      '<tr><th>Arrive at</th>'+rows.map(r=>'<td>'+esc(r.j.term.name)+'</td>').join("")+'</tr>'+
+      '<tr><th>Watch out</th>'+rows.map(r=>'<td style="min-width:200px; white-space:normal; font-size:13px; color:var(--ink-2)">'+esc(r.a.watch)+'</td>').join("")+'</tr>'+
+    '</tbody></table></div>'+
+    '<div class="results" style="margin-top:16px">'+ rows.map((r,i)=>card(r,i+1)).join("") +'</div>';
+  host.querySelectorAll("[data-star]").forEach(b => b.onclick = () => toggleStar(b.dataset.star));
+  document.getElementById("clearList").onclick = () => { shortlist = []; save(); renderAll(); };
+}
+</script>
+
+<script>
+"use strict";
+
+
+/* ============================================================================
+   9b. THE GEOGRAPHIC MAP
+   Artifacts run under a CSP that blocks external tile servers, so there is no
+   Leaflet and no OpenStreetMap here. Instead the basemap is drawn from real
+   coordinates: an equirectangular projection with a cosine correction for this
+   latitude, a hand-traced Thames, and each area at its true position.
+   ========================================================================== */
+const OFFICE = { lat:51.5125, lon:-0.0760, name:"Portsoken House" };
+
+/* The Thames, traced west to east. Enough points to be recognisable — the
+   Isle of Dogs loop is the bit that makes the whole map click into place. */
+const THAMES = [
+  [-0.350,51.4700],[-0.320,51.4720],[-0.300,51.4700],[-0.280,51.4780],[-0.260,51.4840],
+  [-0.240,51.4820],[-0.225,51.4750],[-0.210,51.4680],[-0.195,51.4680],[-0.180,51.4780],
+  [-0.160,51.4840],[-0.140,51.4870],[-0.125,51.4940],[-0.120,51.5010],[-0.105,51.5070],
+  [-0.090,51.5060],[-0.078,51.5080],[-0.070,51.5060],[-0.055,51.5080],[-0.040,51.5090],
+  [-0.030,51.5060],[-0.025,51.4950],[-0.015,51.4850],[-0.005,51.4835],[ 0.005,51.4880],
+  [ 0.008,51.4980],[ 0.008,51.5070],[ 0.020,51.5090],[ 0.040,51.5060],[ 0.060,51.4980],
+  [ 0.075,51.4930],[ 0.100,51.4930],[ 0.120,51.4990],[ 0.150,51.5020],[ 0.180,51.4880],
+  [ 0.220,51.4700],[ 0.265,51.4640]
+];
+
+function renderGeo(){
+  const W = 1060, PAD = 58;
+  const all = evaluate();
+  const lats = all.map(r=>r.a.lat).concat([OFFICE.lat, ...THAMES.map(t=>t[1])]);
+  const lons = all.map(r=>r.a.lon).concat([OFFICE.lon, ...THAMES.map(t=>t[0])]);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const kx = Math.cos((minLat+maxLat)/2 * Math.PI/180);
+  const spanX = (maxLon - minLon) * kx, spanY = maxLat - minLat;
+  const K = (W - PAD*2) / spanX;                       // pixels per degree of latitude
+  const H = spanY * K + PAD*2;
+  const X = lon => PAD + (lon - minLon) * kx * K;
+  const Y = lat => PAD + (maxLat - lat) * K;
+
+  const passIds = new Set(sorted(all.filter(passes)).map(r=>r.a.id));
+  const labelIds = state.labelAll
+    ? new Set(all.filter(r=>passIds.has(r.a.id)).map(r=>r.a.id))
+    : new Set(sorted(all.filter(passes)).slice(0,14).map(r=>r.a.id).concat(shortlist));
+
+  /* The river, drawn as a soft band rather than a hairline so it reads as water. */
+  const pts2 = THAMES.map(t => [X(t[0]), Y(t[1])]);
+  let river = "M "+pts2[0][0].toFixed(1)+" "+pts2[0][1].toFixed(1);
+  for(let i = 1; i < pts2.length - 1; i++){
+    const mx = (pts2[i][0] + pts2[i+1][0]) / 2, my = (pts2[i][1] + pts2[i+1][1]) / 2;
+    river += " Q "+pts2[i][0].toFixed(1)+" "+pts2[i][1].toFixed(1)+" "+mx.toFixed(1)+" "+my.toFixed(1);
+  }
+  river += " L "+pts2[pts2.length-1][0].toFixed(1)+" "+pts2[pts2.length-1][1].toFixed(1);
+
+  /* Rail corridors: each line's areas, in order of how far out they are,
+     joined back to the office. Stations along a line are roughly collinear,
+     so this comes out looking like the real routes. */
+  const groups = {};
+  all.forEach(r => { (groups[r.a.corr] = groups[r.a.corr] || []).push(r); });
+  let corridors = "";
+  Object.values(groups).forEach(g => {
+    g.sort((a,b) => a.a.legs.reduce((s,l)=>s+l.ride,0) - b.a.legs.reduce((s,l)=>s+l.ride,0));
+    const colour = LINES[g[0].a.legs[0].line].c;
+    const live = g.some(r => passIds.has(r.a.id));
+    const d = "M "+X(OFFICE.lon).toFixed(1)+" "+Y(OFFICE.lat).toFixed(1)+" "+
+      g.map(r => "L "+X(r.a.lon).toFixed(1)+" "+Y(r.a.lat).toFixed(1)).join(" ");
+    corridors += '<path d="'+d+'" fill="none" stroke="'+colour+'" stroke-width="2.4" '+
+      'stroke-linejoin="round" stroke-linecap="round" opacity="'+(live?.55:.15)+'" />';
+  });
+
+  let dots = "";
+  const labels = [];
+  const ox = X(OFFICE.lon), oy = Y(OFFICE.lat);
+  all.forEach(r => {
+    const x = X(r.a.lon), y = Y(r.a.lat);
+    const live = passIds.has(r.a.id), starred = shortlist.includes(r.a.id);
+    const fill = "var(--"+r.v.tone+")";
+    dots += '<g opacity="'+(live?1:.28)+'">'+
+      '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(starred?7.5:5.5)+'" fill="'+fill+'" '+
+      'stroke="var(--surface)" stroke-width="'+(starred?2.5:1.8)+'">'+
+      '<title>'+esc(r.a.name+" — "+r.j.total+" min door to door · "+r.a.loc)+'</title></circle>'+
+      (starred ? '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="12" fill="none" stroke="'+fill+'" stroke-width="1.5" opacity=".55" />' : '')+
+      '</g>';
+    if(live && labelIds.has(r.a.id))
+      labels.push({ name:r.a.name, x, y, th:Math.atan2(x-ox, oy-y), starred, colour:"var(--ink-4)" });
+  });
+
+  /* Scale bar — one degree of latitude is 111.32 km, so the pixel scale is known. */
+  const kmPx = K / 111.32, bar = kmPx * 5;
+  const sx = PAD, sy = H - PAD + 22;
+  const scale = '<g stroke="var(--ink-4)" fill="var(--ink-4)">'+
+    '<line x1="'+sx+'" y1="'+sy+'" x2="'+(sx+bar).toFixed(1)+'" y2="'+sy+'" stroke-width="1.5" />'+
+    '<line x1="'+sx+'" y1="'+(sy-4)+'" x2="'+sx+'" y2="'+(sy+4)+'" stroke-width="1.5" />'+
+    '<line x1="'+(sx+bar).toFixed(1)+'" y1="'+(sy-4)+'" x2="'+(sx+bar).toFixed(1)+'" y2="'+(sy+4)+'" stroke-width="1.5" />'+
+    '<text x="'+(sx+bar/2).toFixed(1)+'" y="'+(sy-8)+'" font-size="10.5" text-anchor="middle" stroke="none" '+
+    'font-family="IBM Plex Mono, monospace">5 km</text></g>';
+
+  const compass = '<g><text x="'+(W-PAD)+'" y="'+(PAD-24)+'" font-size="11" text-anchor="middle" fill="var(--ink-4)" '+
+    'font-family="Barlow Semi Condensed, sans-serif" letter-spacing="1.5">N</text>'+
+    '<line x1="'+(W-PAD)+'" y1="'+(PAD-18)+'" x2="'+(W-PAD)+'" y2="'+(PAD-4)+'" stroke="var(--ink-4)" stroke-width="1.2" />'+
+    '<path d="M '+(W-PAD-3.5)+' '+(PAD-14)+' L '+(W-PAD)+' '+(PAD-20)+' L '+(W-PAD+3.5)+' '+(PAD-14)+' Z" fill="var(--ink-4)" /></g>';
+
+  return '<svg viewBox="0 0 '+W+' '+H.toFixed(0)+'" role="img" aria-label="Map of London showing each candidate area at its true position, coloured by commute time">'+
+    '<path d="'+river+'" fill="none" stroke="var(--river)" stroke-width="13" stroke-linejoin="round" stroke-linecap="round" opacity=".9" />'+
+    '<text x="'+X(-0.17).toFixed(1)+'" y="'+(Y(51.487)+22).toFixed(1)+'" font-size="11" fill="var(--river-ink)" '+
+    'font-family="Barlow Semi Condensed, sans-serif" letter-spacing="2.5" font-style="italic">THAMES</text>'+
+    corridors + dots +
+    '<g><circle cx="'+ox.toFixed(1)+'" cy="'+oy.toFixed(1)+'" r="8" fill="var(--accent)" stroke="var(--surface)" stroke-width="2.5" />'+
+    '<circle cx="'+ox.toFixed(1)+'" cy="'+oy.toFixed(1)+'" r="16" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".45" />'+
+    '<text x="'+ox.toFixed(1)+'" y="'+(oy+30).toFixed(1)+'" text-anchor="middle" font-size="12.5" font-weight="700" '+
+    'fill="var(--accent)" font-family="Barlow Semi Condensed, sans-serif" paint-order="stroke" stroke="var(--surface)" '+
+    'stroke-width="4" stroke-linejoin="round">THE OFFICE</text></g>'+
+    declutter(labels, W) + scale + compass +
+  '</svg>';
+}
+
+/* ============================================================================
+   9. THE TIME MAP
+   A polar isochrone: bearing is roughly the real compass direction from
+   Aldgate, and distance from the centre is door-to-door minutes — not miles.
+   The dashed ring is your limit. Anything inside it is in play.
+   ========================================================================== */
+
+/* Ring distance labels, parked in the empty south-west where no area sits. */
+function ringLabel(C, m, r, isTarget){
+  const th = 214 * Math.PI/180;
+  const x = C + r*Math.sin(th), y = C - r*Math.cos(th);
+  return '<text x="'+x.toFixed(1)+'" y="'+(y+3).toFixed(1)+'" font-size="10" text-anchor="middle" '+
+    'font-family="IBM Plex Mono, monospace" fill="'+(isTarget?"var(--accent)":"var(--ink-4)")+'" '+
+    'font-weight="'+(isTarget?600:400)+'" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5" '+
+    'stroke-linejoin="round">'+m+(isTarget?" min":"")+'</text>';
+}
+
+/* Labels want to sit just outside their dot, but the east corridor is crowded.
+   Nudge overlapping labels apart vertically and draw a leader line to any that
+   had to move — the same trick a cartographer does by hand. */
+function declutter(labels, svgW){
+  labels.forEach(L => {
+    L.anchor = Math.sin(L.th) < -0.25 ? "end" : Math.sin(L.th) > 0.25 ? "start" : "middle";
+    L.w = L.name.length * 6.1 + 6;
+    /* A label near the edge of the canvas would run off it, so flip which side
+       of its dot it sits on rather than letting the text get clipped. */
+    if(L.anchor === "end"   && L.x - L.w < 6)        L.anchor = "start";
+    if(L.anchor === "start" && L.x + L.w > svgW - 6) L.anchor = "end";
+    if(L.anchor === "middle"){
+      if(L.x - L.w/2 < 6) L.anchor = "start";
+      else if(L.x + L.w/2 > svgW - 6) L.anchor = "end";
+    }
+    L.lx = L.x + (L.anchor === "end" ? -9 : L.anchor === "start" ? 9 : 0);
+    L.ly = L.y + (L.anchor === "middle" ? (Math.cos(L.th) > 0 ? -11 : 15) : 4);
+    L.h = 14;
+  });
+  const box = L => {
+    const half = L.anchor === "middle" ? L.w/2 : 0;
+    const x0 = L.anchor === "end" ? L.lx - L.w : L.anchor === "start" ? L.lx : L.lx - half;
+    return { x0, x1: x0 + L.w, y0: L.ly - L.h*0.75, y1: L.ly + L.h*0.35 };
+  };
+  for(let pass = 0; pass < 90; pass++){
+    let moved = false;
+    for(let i = 0; i < labels.length; i++){
+      for(let k = i+1; k < labels.length; k++){
+        const A = box(labels[i]), B = box(labels[k]);
+        if(A.x0 < B.x1 && B.x0 < A.x1 && A.y0 < B.y1 && B.y0 < A.y1){
+          const dir = labels[i].ly <= labels[k].ly ? 1 : -1;
+          labels[i].ly -= dir * 0.7; labels[k].ly += dir * 0.7;
+          moved = true;
+        }
+      }
+    }
+    if(!moved) break;
+  }
+  return labels.map(L => {
+    L.lx = Math.max(6, Math.min(svgW - 6, L.lx));
+    const drift = Math.hypot(L.lx - L.x, L.ly - 4 - L.y);
+    const leader = drift > 13
+      ? '<line x1="'+L.x.toFixed(1)+'" y1="'+L.y.toFixed(1)+'" x2="'+L.lx.toFixed(1)+'" y2="'+(L.ly-3.5).toFixed(1)+
+        '" stroke="'+L.colour+'" stroke-width="1" opacity=".5" />' : '';
+    return leader + '<text x="'+L.lx.toFixed(1)+'" y="'+L.ly.toFixed(1)+'" font-size="11.5" text-anchor="'+L.anchor+'" '+
+      'font-family="Barlow Semi Condensed, sans-serif" font-weight="'+(L.starred?700:600)+'" fill="var(--ink)" '+
+      'paint-order="stroke" stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round">'+esc(L.name)+'</text>';
+  }).join("");
+}
+
+function polarSvg(){
+  const W = 820, C = W/2, MAXR = C - 78;
+  const rOf = m => Math.min(m, SCALE_MAX) / SCALE_MAX * MAXR;
+  const all = evaluate();
+  const passIds = new Set(sorted(all.filter(passes)).map(r => r.a.id));
+  const labelIds = new Set(
+    sorted(all.filter(passes)).slice(0,10).map(r => r.a.id).concat(shortlist)
+  );
+
+  let rings = "";
+  [15,25,35,45,55].forEach(m => {
+    const isTarget = m === state.target;
+    rings += '<circle cx="'+C+'" cy="'+C+'" r="'+rOf(m).toFixed(1)+'" fill="none" '+
+      'stroke="'+(isTarget ? "var(--accent)" : "var(--line)")+'" stroke-width="'+(isTarget?2:1)+'" '+
+      (isTarget ? 'stroke-dasharray="6 5"' : 'stroke-dasharray="2 4"')+' />'+
+      ringLabel(C, m, rOf(m), isTarget);
+  });
+  if(!( [15,25,35,45,55].includes(state.target) )){
+    rings += '<circle cx="'+C+'" cy="'+C+'" r="'+rOf(state.target).toFixed(1)+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5" />'+
+      ringLabel(C, state.target, rOf(state.target), true);
+  }
+
+  let spokes = "";
+  [["N",0],["E",90],["S",180],["W",270]].forEach(([n,b]) => {
+    const th = b * Math.PI/180, r = MAXR + 26;
+    spokes += '<text x="'+(C + r*Math.sin(th)).toFixed(1)+'" y="'+(C - r*Math.cos(th) + 4).toFixed(1)+
+      '" font-size="11" text-anchor="middle" fill="var(--ink-4)" font-family="Barlow Semi Condensed, sans-serif" letter-spacing="1.5">'+n+'</text>';
+  });
+
+  let pts = "";
+  const labels = [];
+  all.forEach(r => {
+    const th = r.a.brg * Math.PI/180;
+    const rad = rOf(r.j.total);
+    const x = C + rad*Math.sin(th), y = C - rad*Math.cos(th);
+    const colour = LINES[r.a.legs[0].line].c;
+    const live = passIds.has(r.a.id);
+    const starred = shortlist.includes(r.a.id);
+    pts += '<g opacity="'+(live ? 1 : .3)+'">'+
+      '<line x1="'+C+'" y1="'+C+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+colour+'" stroke-width="'+(starred?2:1)+'" opacity="'+(starred?.55:.16)+'" />'+
+      '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(starred?6:4.5)+'" fill="'+colour+'" stroke="var(--surface)" stroke-width="1.5">'+
+      '<title>'+esc(r.a.name+" — "+r.j.total+" min door to door, "+LINES[r.a.legs[0].line].name)+'</title></circle>';
+    if(labelIds.has(r.a.id)) labels.push({ name:r.a.name, x, y, th, starred, colour });
+    pts += '</g>';
+  });
+  pts += declutter(labels, W);
+
+  return '<svg viewBox="0 0 '+W+' '+W+'" role="img" aria-label="Polar map of areas around Aldgate, plotted by compass bearing and door-to-door commute time">'+
+    rings + spokes + pts +
+    '<circle cx="'+C+'" cy="'+C+'" r="7" fill="var(--accent)" />'+
+    '<circle cx="'+C+'" cy="'+C+'" r="13" fill="none" stroke="var(--accent)" stroke-width="1" opacity=".4" />'+
+    '<text x="'+C+'" y="'+(C+30)+'" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)" '+
+    'font-family="Barlow Semi Condensed, sans-serif" paint-order="stroke" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round">ALDGATE</text>'+
+  '</svg>';
+}
+
+/* Two ways of looking at the same 44 places: where they physically are, and
+   how far away they are in the only unit that matters on a Tuesday morning. */
+function renderMap(){
+  const geo = state.mapView !== "time";
+  const caption = geo
+    ? 'Every area at its true position, coloured by commute: green clears the '+state.target+
+      '-minute limit comfortably, amber is on the line, red is over. The coloured routes are the rail corridors '+
+      'back to the office. What it shows at a glance is how lopsided the search is — the network runs north-east from Aldgate, and so does the shortlist.'
+    : 'Each dot sits at its true compass bearing from the office, but at a radius set by its commute rather than its distance. '+
+      'Dots inside the magenta ring clear the '+state.target+'-minute limit. Colours are the line you would ride. '+
+      'Hover any dot for the ones not labelled.';
+  document.getElementById("panel-map").innerHTML =
+    '<div class="mapcard">'+
+      '<div class="maphead">'+
+        '<div class="seg-ctl" role="tablist">'+
+          '<button role="tab" data-mapview="geo"  aria-selected="'+geo+'">Where they are</button>'+
+          '<button role="tab" data-mapview="time" aria-selected="'+(!geo)+'">How far in minutes</button>'+
+        '</div>'+
+        (geo ? '<label class="switch mini" for="labelAll">Label every area'+
+               '<input type="checkbox" id="labelAll"'+(state.labelAll?" checked":"")+'><span class="track"></span></label>' : '')+
+      '</div>'+
+      (geo ? renderGeo() : polarSvg())+
+      '<p class="mapnote">'+caption+'</p>'+
+    '</div>';
+  document.querySelectorAll("[data-mapview]").forEach(b =>
+    b.onclick = () => { state.mapView = b.dataset.mapview; save(); renderMap(); });
+  const la = document.getElementById("labelAll");
+  if(la) la.onchange = e => { state.labelAll = e.target.checked; save(); renderMap(); };
+}
+
+/* ============================================================================
+   10. METHOD
+   ========================================================================== */
+function renderMethod(){
+  document.getElementById("panel-method").innerHTML = '<div class="prose">'+
+  '<h2>How this works, and what to trust</h2>'+
+  '<div class="callout"><p><b>Treat every number here as a shortlist tool, not a timetable.</b> '+
+  'The commute times are built from scheduled journey times and typical peak frequencies. Before you offer on anything, '+
+  'do the journey once at 8am on a Tuesday. That single test run will tell you more than this whole page.</p></div>'+
+
+  '<h3>The office is the whole point</h3>'+
+  '<p>Everything is measured to <b>Portsoken House, 155–157 Minories, London EC3N 1LJ</b>, at the eastern edge of the City. '+
+  'That address sits in an unusually well-connected spot, and which station you arrive at changes the final walk more than people expect:</p>'+
+  '<ul>'+
+    Object.values(TERMINI).sort((a,b)=>a.walk-b.walk).map(t =>
+      '<li><b>'+esc(t.name)+'</b> — about '+t.walk+' min. '+esc(t.note)+'.</li>').join("")+
+  '</ul>'+
+  '<p>This is the single most useful thing to come out of building this. A train that runs into <b>Fenchurch Street</b> saves four minutes '+
+  'a day over one that runs into Liverpool Street, and the <b>Metropolitan line terminates at Aldgate itself</b> — three minutes from the desk, no changes at all. '+
+  'It is why Upminster, twenty-two minutes out on the c2c, lands inside the limit while places that look far closer on a tube map do not.</p>'+
+
+  '<h3>What the door-to-door number is made of</h3>'+
+  '<p><code>walk to station + platform wait + time on the train + interchange penalty + walk to the office</code></p>'+
+  '<ul>'+
+  '<li><b>Walk to station</b> is currently set to <b>'+state.walkMins+' minutes</b> and applied to every area identically. That is deliberate — '+
+  'it keeps the comparison honest. In the outer suburbs you can usually buy within five minutes of a station; in Hackney or Greenwich you often cannot.</li>'+
+  '<li><b>Platform wait</b> is half the typical peak headway, capped at eight minutes. This is why Highams Park and Chingford, on a train every twelve minutes, '+
+  'score worse than their timetable suggests, and why the Elizabeth line and District line flatter theirs.</li>'+
+  '<li><b>Interchange penalty</b> is '+state.changeMins+' minutes per change. Only the Windrush-line areas need one, at Whitechapel.</li>'+
+  '<li><b>The bad-day figure</b> adds 15% plus four minutes. It is a rule of thumb for signal failures and short-formed trains, not a modelled distribution.</li>'+
+  '</ul>'+
+
+  '<h3>The scores are judgement, not measurement</h3>'+
+  '<p>Parking, walkability, green space and amenities are hand-scored 1–5 from what these places are actually like. '+
+  '<b>Parking</b> weighs controlled-zone coverage, how likely a house is to have a drive, and street pressure — it is the score most worth checking yourself, '+
+  'because it varies street by street in a way no area-level number can capture. Rents and prices are approximate typical figures for a 2-bed rental '+
+  'and a 3-bed house; use them to rank areas against each other, not to budget.</p>'+
+
+  '<h3>Two things about the car</h3>'+
+  '<ul>'+
+  '<li><b>ULEZ covers all of Greater London</b>, so there is no escaping it by moving further out within the boundary. Check your car complies before anything else — '+
+  'if it does not, that is a daily charge wherever you live in London.</li>'+
+  '<li><b>The office is right on the eastern edge of the Congestion Charge zone.</b> Driving to it would be charged on top. This is a commute to make by train, '+
+  'which is rather the point of everything above.</li>'+
+  '</ul>'+
+
+  '<h3>What this deliberately does not do</h3>'+
+  '<ul>'+
+  '<li>It does not know about schools, which will matter later even if it does not now.</li>'+
+  '<li>It does not price specific streets. Two roads either side of the North Circular in South Woodford are very different places.</li>'+
+  '<li>It scores one commute only. If a second workplace enters the picture, the honest move is to rerun this with both and score each area on the worse of the two.</li>'+
+  '<li>It stops at 60 minutes. Leigh-on-Sea and St Albans are lovely and neither one gets close.</li>'+
+  '</ul>'+
+
+  '<h3>If you want the short answer</h3>'+
+  '<p>There are two answers, depending on how hard a constraint the car really is.</p>'+
+  '<p><b>If parking is negotiable</b>, the ranking is emphatic. <b>Forest Gate</b> at 29 minutes, <b>Stratford</b> at 26 and '+
+  '<b>Walthamstow Central</b> at 36 take the top three, because each pairs a short commute with genuinely good streets, parks and shops. '+
+  'All three score “workable” rather than easy on parking — controlled zones, mostly on-street. And further down that list '+
+  '<b>Mile End</b> at 21 minutes wins on every single axis except the one you said you cannot move on.</p>'+
+  '<p><b>If the car is non-negotiable</b>, turn on the parking filter and it narrows to three. <b>Wanstead</b> (39 min) is the best '+
+  'all-rounder here: village high street, Epping Forest, streets wide enough to park on. <b>Upminster</b> (39 min) is the value play — '+
+  'the same commute for about £300 a month less and a house with a drive, paid for by being genuinely far out. '+
+  '<b>Highams Park</b> (44 min) sits between the two and is the one most likely to be underpriced for what it gives you.</p>'+
+  '<p>The near-misses worth testing in person rather than trusting this page on: <b>Chingford</b> (49), <b>Gidea Park</b> (46) and '+
+  '<b>South Woodford</b> (43, and the easiest parking of any Central line stop). Each one turns on a single train.</p>'+
+  '</div>';
+}
+
+/* ============================================================================
+   11. WIRING
+   ========================================================================== */
+function renderAll(){
+  renderResults();
+  if(tab === "compare") renderCompare();
+  if(tab === "map") renderMap();
+  if(tab === "method") renderMethod();
+  document.getElementById("tab-n-short").textContent = shortlist.length || "";
+}
+function showTab(t){
+  tab = t;
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  ["explore","compare","map","method"].forEach(k =>
+    document.getElementById("panel-"+k).hidden = (k !== t));
+  renderAll();
+  window.scrollTo({ top:0, behavior:"instant" });
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+const sortSel = document.getElementById("sortSel");
+sortSel.value = state.sort;
+sortSel.onchange = e => { state.sort = e.target.value; save(); renderAll(); };
+
+/* The console is always open on desktop, but on a phone it would push the
+   results off the bottom of the screen, so it starts folded away. */
+const wide = window.matchMedia("(min-width:981px)");
+const syncConsole = () => { document.getElementById("ctlToggle").open = wide.matches; };
+wide.addEventListener("change", syncConsole);
+syncConsole();
+
+renderConsole();
+renderAll();
+</script>
