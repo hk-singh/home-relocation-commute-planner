@@ -50,6 +50,42 @@ This is the sort of thing you only find by picking one specific address and bein
 it. "Near Aldgate" would have hidden it completely. **Lesson: specificity is where the insight
 lives.** A model built on a vague anchor gives you vague answers that feel right and are wrong.
 
+### The corollary, which took a good question to surface
+
+The first version of this had 44 areas and a blind spot. Someone asked two questions — *why no
+Bexleyheath?* and *why nothing with fast trains?* — and both turned out to have the **same
+answer**, which is the terminus table above read upside down.
+
+A fast train only pays off if it arrives somewhere close. Sort the termini by that final walk and
+London splits cleanly in two:
+
+- **Liverpool Street (9 min) and Fenchurch Street (5 min)** are close enough that speed survives.
+  They serve Essex and the Thames-side towns — and nothing else.
+- **Cannon Street is 14 minutes away**, and every Southeastern train out of Bexley and north-west
+  Kent runs there. That walk costs about ten minutes against an Essex town at the same rail
+  distance. Bexleyheath has three-bed semis with driveways under £500k, a direct train, and Danson
+  Park — and lands *fifteen minutes over*, purely because of where its train stops.
+- **St Pancras, Paddington, Marylebone, Waterloo** are worse still. Ebbsfleet does 19 minutes on
+  High Speed 1 — the fastest rail leg in the whole dataset — and still can't get under 50, because
+  it arrives at the wrong end of town.
+
+So the answer to "why so few fast trains" isn't that I forgot them. It's that **this office's
+geography only rewards fast trains from one direction.** The one genuine express that earns its
+keep is Shenfield: 22 minutes into Liverpool Street, the same as Upminster, from twice the
+distance — and it *was* missing, so it got added along with twelve others.
+
+**Two lessons here, and the second is the uncomfortable one:**
+
+1. **A good model doesn't just rank the options — it explains the shape of the answer.** Once the
+   terminus table existed, "why not Bexleyheath" stopped being a matter of opinion and became
+   arithmetic. That's the difference between a tool that scores things and a tool that
+   *teaches you the territory*.
+2. **A blind spot in your data looks exactly like an absence of options.** Nothing in the first
+   version was wrong. Bexleyheath scored no points because it wasn't there to score, and a
+   ranked list gives you no way to tell "we checked and it lost" from "we never looked". The fix
+   was to include the losers explicitly, with their numbers and the reason. **If your tool can
+   only show you what it considered, it will quietly convince you that's everything there is.**
+
 ---
 
 ## How the commute number is actually built

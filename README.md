@@ -7,7 +7,7 @@ Open `index.html` in any browser. No build, no server, no dependencies.
 
 ## What it does
 
-Scores 44 London areas against four constraints at once:
+Scores 57 London areas against four constraints at once:
 
 - **Door-to-door commute** under 45 minutes, modelled properly — walk to the station, platform
   wait, time on the train, interchange penalty, and the walk from the arrival station to the desk.
@@ -28,6 +28,12 @@ The office is within walking distance of six stations, and the final walk ranges
 (Aldgate, where the Metropolitan line terminates) to 9 (Liverpool Street). That difference
 re-ranks the whole map — it's why Upminster, 22 minutes out on the c2c into Fenchurch Street,
 lands inside the limit while places that look far closer on a tube map don't.
+
+Read the other way, it also explains the gaps. Cannon Street is a 14-minute walk, so the entire
+Southeastern corridor out through Bexley loses ten minutes at the end of every journey no matter
+how fast the train — which is why Bexleyheath, with cheap houses and a direct train, still comes
+out fifteen minutes over. Areas that lose are included and shown with their numbers rather than
+left out, so an absence never has to be guessed at.
 
 ## Deploying
 
