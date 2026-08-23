@@ -147,6 +147,44 @@ empty. That's not a rendering artifact, that's the actual shape of the rail netw
 address, and it means the search area is really "east and north-east London" whether you like it
 or not.
 
+### The geographic map, and a constraint that turned out to be a gift
+
+The natural way to build "show me where these places are" is Leaflet plus OpenStreetMap tiles.
+Fifteen lines of code, everyone's seen it.
+
+That was impossible here. Artifacts run under a Content Security Policy that blocks requests to
+external hosts — no CDN scripts, no tile servers, no remote images. The map had to be drawn from
+scratch or not at all.
+
+So it's drawn from scratch: an equirectangular projection with a cosine correction for London's
+latitude (without it, everything stretches east–west by about 38%), a hand-traced Thames, and all
+44 areas at their real coordinates. Rail corridors are polylines from the office out through each
+line's stations in order of distance — stations along a line are roughly collinear, so this comes
+out looking like the actual routes without any route geometry at all. Dots are coloured by
+commute verdict rather than by line, so the shape of the answer is visible before you read a
+single label.
+
+And the constraint made it *better*. A tile map would have shown you all of London in
+photographic detail, most of which is irrelevant. This shows exactly six things — the river for
+orientation, the office, the corridors, the areas, their commute verdict, and a scale bar. You
+can see in one glance the thing that actually matters: **the network runs north-east from
+Aldgate, so the search does too.** The south-west of the map is empty, and that emptiness is
+information.
+
+**Lesson: a hard constraint often forces you into a better design than free choice would have.**
+The tile map was the lazy answer, and I'd have shipped it if I'd been allowed to.
+
+### The two-map problem
+
+There are now two maps, and it took building both to see why you need both. The geographic one
+answers "where would we actually live?" The polar one — bearing is true, but radius is *minutes*
+— answers "how far is that in the only unit that matters on a Tuesday morning?" Neither
+substitutes for the other, because the whole premise of the project is that **distance and time
+have come apart**. Upminster is far away and close. Chingford is close and far away.
+
+So they're a toggle on one tab rather than two separate features. Same data, two projections, and
+the difference between them *is* the insight.
+
 ---
 
 ## Bugs I hit, and what they taught me
@@ -219,6 +257,36 @@ that had to move far. Ninety iterations of an O(n²) loop over fourteen labels i
 about a thousand comparisons. **Lesson: "too slow" is a claim you should check, not assume.
 Brute force is usually fine at small n, and it's always easier to read than the clever version.**
 
+### 5. The automation that wasn't allowed to automate
+
+The deploy workflow does the obvious thing: build the site, push it to GitHub Pages. It failed
+with `Get Pages site failed. Please verify that the repository has Pages enabled`.
+
+The error helpfully names a fix — `actions/configure-pages` takes an `enablement: true` flag that
+turns Pages on via the API. So I set it, pushed, and got a *different* failure:
+`Create Pages site failed. Error: Resource not accessible by integration`.
+
+The workflow's token simply isn't permitted to create a Pages site. No amount of cleverness in
+the YAML changes that. The same wall showed up earlier in the session: creating the repository
+itself returned `403 Resource not accessible by integration`, because the credentials in play
+were scoped to specific repositories and did not include "make new ones".
+
+Two lessons, and the second is the real one:
+
+1. **An error that suggests a fix is not a promise the fix will work.** `enablement: true` is
+   genuinely the right answer — for a token that has the permission. Reading the suggestion and
+   trying it was correct; assuming it would work was not.
+2. **When you hit a permissions boundary, stop and say so, rather than routing around it.**
+   The tempting next moves — hunt for a different token, try the REST API directly, find some
+   other host to deploy to — all amount to working around a boundary that exists on purpose. The
+   right move was to do everything that *was* possible (repo, code, workflow, docs all pushed and
+   correct), reduce the human's remaining work to a single switch, document that switch in both
+   the workflow and the README, and hand it over honestly.
+
+The failed `enablement: true` got reverted rather than left in place. Leaving behind a setting
+that demonstrably cannot work — on the theory that it looks like it's trying — is worse than not
+having it, because the next person to read the file will believe it.
+
 ---
 
 ## Things I chose not to build, and why
@@ -226,6 +294,8 @@ Brute force is usually fine at small n, and it's always easier to read than the 
 Naming what you deliberately left out is part of the deliverable. It's the difference between a
 gap and an oversight.
 
+- **No slippy map.** See above — the CSP forbids tile servers, and the hand-drawn map turned out
+  to be the better answer anyway.
 - **No live TfL API.** Journey times come from scheduled services and typical peak frequencies.
   A live API would make the numbers look more authoritative without making them more true — you'd
   be getting today's disruption baked into a decision about the next five years. What the page
