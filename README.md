@@ -11,7 +11,9 @@ Scores 65 London areas against four constraints at once:
 
 - **Door-to-door commute** under 45 minutes, modelled properly — walk to the station, platform
   wait, time on the train, interchange penalty, and the walk from the arrival station to the desk.
-- **Parking** — how realistic it is to keep a car there.
+- **Parking, in two parts** — whether there is anywhere to put a car, *and* whether a tenancy
+  actually entitles you to use it. Many London developments are permit-free by planning condition,
+  so tenants can never hold a resident permit. Areas are scored on the lower of the two.
 - **Walkability** and **green space** — the neighbourhood you'd actually live in.
 
 Five views: a ranked list with each commute drawn on a shared 60-minute scale, a side-by-side
@@ -19,7 +21,7 @@ shortlist, a polar time map (bearing = compass direction, radius = minutes), and
 method with the assumptions and caveats spelled out, plus a price-against-commute chart that picks
 out the **efficient frontier** — the areas nothing else beats on both cost and journey time.
 
-## Prices are real
+## Rents and prices
 
 Every price comes from **HM Land Registry Price Paid Data** for 2025–26: 1,184,740 recorded
 residential sales, filtered to these postcode zones and to standard full-value transactions, under
@@ -31,7 +33,13 @@ their terms, both run bot protection that breaks scrapers quickly, and sold pric
 evidence than asking prices anyway. The trade-off is that there are no live listings here — run
 that search yourself and bring addresses back to check against the commute.
 
-Rent figures remain estimates and are labelled as such; Land Registry publishes sales, not lettings.
+Rents come from the **ONS Price Index of Private Rents**, the official monthly measure by local
+authority — shown on every card with the month it was measured. The per-area 2-bed figures are
+estimates calibrated against those borough anchors, and are labelled as estimates everywhere they
+appear: they are the only unmeasured numbers in the app.
+
+Sold prices are kept as secondary context ("if you were buying") — not what a renter pays, but a
+good signal of how an area is regarded.
 
 Everything is adjustable — the time ceiling, how far you'll walk to a station, the interchange
 penalty, the rent cap, and how much each of the four priorities counts. Settings and shortlist

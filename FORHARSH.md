@@ -418,6 +418,47 @@ that a model weighted toward parking had systematically skipped.
 parking, so it kept finding suburbs — correctly, given its inputs, and incompletely. The fix for a
 blind spot is rarely a better algorithm; it's a different source of candidates.
 
+### The constraint that was hiding behind the constraint
+
+Late on, one sentence changed the answer more than any dataset had: *we are not purchasing and just
+renting.*
+
+The obvious consequence was easy — swap the money axis from sold prices to rent, re-score, done. The
+non-obvious consequence was the interesting one. **Many London developments are granted planning
+permission on condition that residents can never hold an on-street parking permit.** Hackney, Tower
+Hamlets, Newham, Southwark and Barking & Dagenham all run formal car-free registers. It binds tenants
+exactly as it binds owners, and it is attached to the building permanently.
+
+Which meant the "parking" score had quietly been measuring the wrong thing all along. It answered *is
+there anywhere to put a car* when the question that actually decides it is *will your tenancy let you*.
+Those come apart badly, and they come apart precisely where it hurts: the newest, best-connected,
+best-value developments are the ones most likely to be car-free. Stratford, Custom House, Royal
+Victoria, Canada Water, Poplar, Tottenham Hale — six of the strongest recommendations on the previous
+scoring — all became "assume no car."
+
+The fix was to split it into two scores and take the **lower** of the two, because both have to be true
+at once.
+
+**Lessons, and the first is the one I keep relearning:**
+
+1. **A change in circumstances is not always a change of parameter.** "We're renting" sounds like it
+   only touches the price column. It actually invalidated a *different* column, one nobody was looking
+   at. When a premise shifts, re-derive rather than re-parameterise — ask what else was resting on the
+   old premise, and go and check.
+2. **A score can be well-calibrated and still be measuring the wrong quantity.** The parking numbers
+   weren't inaccurate; they were answering a question adjacent to the one that mattered. That failure
+   mode is much harder to catch than a wrong number, because nothing looks broken — it looks confident
+   and precise, and it is quietly about something else.
+3. **Some facts are yes/no, and those are the ones to check first.** Whether an address is in a
+   permit-free development isn't a judgement call or a score out of five. The council will tell you.
+   When a binary fact sits upstream of a whole ranking, it belongs at the top of the page — which is
+   where it now is, in a callout, above everything else.
+
+There is a pleasing coda. Wanstead had been dropped one round earlier for being unaffordable — a £935k
+median house price against a £750k budget. Renting removes that barrier completely, and it walked
+straight back onto the shortlist at about £1,900 a month. Two rounds, two reversals, both driven by
+finding out something true rather than by thinking harder about what I already had.
+
 ---
 
 ## Things I chose not to build, and why
