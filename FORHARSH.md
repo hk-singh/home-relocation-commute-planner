@@ -504,6 +504,45 @@ thinking harder: a terminus walk table, real sold prices, a renting-versus-buyin
 second office. The tool got better each time it was told it was wrong — which is the only
 real argument for building the thing as a model rather than as an opinion.
 
+### The correction that cost the headline
+
+The last input was one line: *both of us have two days a week, but I would prefer three.* I had been
+assuming Tisha commuted five days. She commutes two.
+
+The arithmetic consequence was pleasant — household travel for Wanstead fell from 9.6 hours a week to
+7.3. The design consequence was bigger. At five days against two it was right to let Tisha's journey
+outvote mine; at two against three they weigh almost the same, which means **an area that is excellent
+for one person and grim for the other no longer averages out into looking fine.** So the score now
+takes points off for a lopsided pair, and every card carries a balance reading measured against each
+person's own ceiling rather than in raw minutes — 47 out of 60 is not the same burden as 47 out of 45.
+
+The deeper consequence took longer to see. Five commuting days a week *between two people* means five
+days a week where neither of them goes anywhere. They are choosing a place they'll spend far more time
+in than travelling from. So the commute should set the boundary of what's possible and then largely get
+out of the way — which is a different optimisation from the one I'd been running for six rounds.
+
+That became a **Hybrid** button: commute weight down, walkability and green space up. And then it
+embarrassed me.
+
+I had already written, in the page, that Wanstead "comes top under every ceiling and both weightings."
+I ran the check anyway, and under the hybrid weighting **Brentwood beat it, 83% to 81%** — cheaper,
+and the only area scoring five out of five for walkability, green space and parking at once.
+
+**Three lessons, and the last is the one that matters:**
+
+1. **Verify claims about your own output, especially the flattering ones.** "Wanstead wins under every
+   configuration" was a lovely sentence and I had no evidence for half of it. I nearly shipped it
+   because it *felt* established after several rounds of Wanstead winning.
+2. **A robustness claim is a testable claim.** "This answer doesn't move" is precisely the kind of
+   statement you can check in one query, so there is no excuse for asserting it from impression.
+3. **When two reasonable weightings disagree, that disagreement is the finding.** The temptation was
+   to pick a weighting and present one answer. But the honest report is that Wanstead wins if the
+   commute leads and Brentwood wins if the neighbourhood does — and **which of those is right depends
+   on something the model cannot know**: whether five commuting days a week feels like a lot or a
+   little to the people living it. A tool that hides that behind a single ranking is pretending to an
+   authority it does not have. Surfacing it turns the tool from an oracle into an argument you can
+   have properly.
+
 ---
 
 ## Things I chose not to build, and why

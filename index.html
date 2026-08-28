@@ -874,8 +874,8 @@ const DEFAULTS = {
   target: 45,        // Tisha's door-to-door ceiling
   targetB: 60,       // yours — two days a week tolerates more than five does
   twoJobs: true,     // the Wayve role is not confirmed; switch this off to plan without it
-  daysA: 5,          // days a week Tisha travels to Aldgate
-  daysB: 2,          // days a week you would travel to N7
+  daysA: 2,          // days a week Tisha travels to Aldgate
+  daysB: 3,          // days a week you would travel to N7 (your preference; 2 is the requirement)
   walkMins: 8,       // walk from front door to home station
   changeMins: 5,     // penalty per interchange
   needParking: false,
@@ -962,12 +962,19 @@ function score(a, j, jb){
   const band = (t, ceiling) => t <= 25 ? 5
               : t >= ceiling + 12 ? 0
               : 5 * (1 - (t - 25) / ((ceiling + 12) - 25));
-  /* Both commutes matter, but not equally — weight each by how many days a week
-     it is actually made. Five days at Aldgate outvotes two days at N7. */
+  /* Both commutes matter, weighted by how many days a week each is actually made.
+     At 2 days against 3 they weigh almost the same, which means an area that is
+     brilliant for one of you and miserable for the other no longer averages out
+     into looking fine — hence the balance penalty below. */
   let commute = band(j.total, state.target);
   if(state.twoJobs && jb){
     const wA = state.daysA, wB = state.daysB;
-    commute = (wA * commute + wB * band(jb.total, state.targetB)) / (wA + wB);
+    commute = (wA * commute + wB * band(jb.total, state.targetB)) / (wA + wB) || 0;
+    /* Balance penalty. Whoever draws the long straw does it every week, and when
+       the two of you are in on a similar number of days there is no longer a
+       "mostly it's fine" to hide behind. Half a point off for a 20-minute gap. */
+    const gap = Math.abs((j.total / state.target) - (jb.total / state.targetB));
+    commute = Math.max(0, commute - Math.min(1.2, gap * 2.2));
   }
   /* Value is scored on monthly rent against your budget: comfortably under
      scores 5, right at it scores ~2.5, well over scores 0. */
@@ -1087,10 +1094,10 @@ function renderConsole(){
   c.innerHTML =
   '<div class="panel"><header><span class="eyebrow">The hard limits</span></header><div class="body">'+
     ctlSwitch("twoJobs","Plan for two commutes", state.twoJobs, "The Wayve role is not confirmed. Turn this off to see the shortlist as it stands if it does not convert.")+
-    ctlRange("target","Tisha\u2019s ceiling — Aldgate",state.target,30,60,1," min","Five days a week, so this is the binding one.")+
-    (state.twoJobs ? ctlRange("targetB","Your ceiling — Wayve, N7",state.targetB,30,90,1," min","Only two days a week, so it can reasonably be looser.")+
+    ctlRange("target","Tisha\u2019s ceiling — Aldgate",state.target,30,75,1," min","Her stated limit. Worth revisiting: it was set when this looked like a five-day commute.")+
+    (state.twoJobs ? ctlRange("targetB","Your ceiling — Wayve, N7",state.targetB,30,90,1," min","")+
       ctlRange("daysA","Tisha, days a week",state.daysA,1,5,1,"","")+
-      ctlRange("daysB","You, days a week",state.daysB,0,5,1,"","Weights how much each commute counts in the ranking.") : "")+
+      ctlRange("daysB","You, days a week",state.daysB,0,5,1,"","Weights how much each commute counts. With 2 and 3 they count almost equally, so a badly lopsided area is worse than the average suggests — watch the balance figure on each card.") : "")+
     ctlRange("walkMins","Walk to your home station",state.walkMins,3,15,1," min","Applied to every area equally so the comparison is fair. Drop it to 5 to model buying nearer a station.")+
     ctlRange("changeMins","Cost of each interchange",state.changeMins,2,10,1," min","Stairs, platform, and waiting for the next train.")+
     ctlSwitch("needParking","Must be parkable as a tenant", state.needParking, "Hides anywhere a rental is unlikely to come with anywhere to put the car — including permit-free new builds.")+
@@ -1099,7 +1106,7 @@ function renderConsole(){
   '</div></div>'+
 
   '<div class="panel"><header><span class="eyebrow">What matters to you</span>'+
-    '<button class="btn small" id="resetW">Reset</button></header><div class="body"><div class="weights">'+
+    '<div style="display:flex; gap:6px"><button class="btn small" id="hybridW" title="Weight the things you use on the days you are not commuting">Hybrid</button><button class="btn small" id="resetW">Reset</button></div></header><div class="body"><div class="weights">'+
     WEIGHT_META.map(([k,label]) =>
       '<div class="wrow ctl"><label for="w-'+k+'">'+label+
       '<span class="pips">'+[1,2,3,4,5].map(i=>'<span class="pip'+(i<=state.weights[k]?" on":"")+'"></span>').join("")+'</span></label>'+
@@ -1130,6 +1137,15 @@ function renderConsole(){
   });
   const rw = document.getElementById("resetW");
   if(rw) rw.onclick = () => { state.weights = JSON.parse(JSON.stringify(DEFAULTS.weights)); save(); renderConsole(); renderAll(); };
+  /* Between you there are five office days a week and five spent at home. The
+     default weights were set when this looked like a five-day commute; this
+     resets them for a hybrid week, where the neighbourhood gets more use than
+     the trains do. */
+  const hw = document.getElementById("hybridW");
+  if(hw) hw.onclick = () => {
+    state.weights = { commute:3, parking:4, walk:5, green:5, amen:4, value:4 };
+    save(); renderConsole(); renderAll();
+  };
 }
 function ctlRange(id,label,val,min,max,step,suffix,hint){
   const shown = id === "maxRent" ? money(val) : val + suffix;
@@ -1146,6 +1162,16 @@ function ctlSwitch(id,label,on,hint){
 /* ============================================================================
    7. RESULT CARDS
    ========================================================================== */
+/* How evenly the two commutes fall, measured against each person's own ceiling
+   rather than in raw minutes — 47 minutes out of 60 is not the same burden as
+   47 out of 45. */
+function balanceWord(r){
+  const gap = Math.abs((r.j.total / state.target) - (r.jb.total / state.targetB));
+  return gap < 0.10 ? "evenly split"
+       : gap < 0.22 ? "slightly lopsided"
+       : (r.j.total / state.target > r.jb.total / state.targetB ? "hard on Tisha" : "hard on you");
+}
+
 function card(r, rank){
   const {a, j, s, v} = r;
   const on = shortlist.includes(a.id);
@@ -1164,16 +1190,16 @@ function card(r, rank){
         '<div class="matchwrap" title="Weighted match against your priorities">'+
           '<div class="matchbar"><i style="width:'+s.pct+'%"></i></div>'+
           '<span class="matchnum">'+s.pct+'% match</span>'+
-          (state.twoJobs && r.jb ? '<span class="wk">'+(r.wk/60).toFixed(1)+' h/week travelling</span>' : '')+
+          (state.twoJobs && r.jb ? '<span class="wk">'+(r.wk/60).toFixed(1)+' h/week · '+balanceWord(r)+'</span>' : '')+
         '</div>'+
       '</div>'+
     '</div>'+
     '<div class="strip-area">'+
-      '<div class="striplab">Tisha → Aldgate · '+state.daysA+' days a week</div>'+
+      '<div class="striplab">Tisha → Aldgate · '+state.daysA+' day'+(state.daysA===1?'':'s')+' a week</div>'+
       strip(j) + routeLine(a, j) +
       '<div class="legend"><span style="color:var(--ink-4)">Allow about '+j.badday+
       ' min on a bad day (delays, a missed connection, weather).</span></div>'+
-      (state.twoJobs && r.jb ? '<div class="striplab second">You → Wayve, N7 · '+state.daysB+' days a week</div>'+
+      (state.twoJobs && r.jb ? '<div class="striplab second">You → Wayve, N7 · '+state.daysB+' day'+(state.daysB===1?'':'s')+' a week</div>'+
         strip(r.jb, state.targetB, SCALE_MAX_B) + routeLine(a, r.jb, a.w) +
         '<div class="legend"><span style="color:var(--ink-4)">Allow about '+r.jb.badday+' min on a bad day.</span></div>' : '')+
     '</div>'+
@@ -1873,6 +1899,35 @@ function renderMethod(){
   '(<b>Belvedere</b>, <b>Erith</b>, and Bexley beyond) drops onto Southeastern and immediately loses ten to fifteen minutes to a change or to '+
   'that Cannon Street walk. Abbey Wood is not just a good option in south-east London — it is the edge of what is reachable at all.</p>'+
 
+  '<h3>Five office days between you changes what you are optimising for</h3>'+
+  '<div class="callout"><p>Two days for Tisha and three for you is <b>five commuting days a week between two people</b> — and five days each '+
+  'when neither of you goes anywhere. You are choosing a place you will spend far more time <em>in</em> than travelling <em>from</em>. '+
+  'The commute still sets the boundary of what is possible; it should no longer dominate the choice inside it.</p></div>'+
+  '<p>Three things follow, and they pull in the same direction:</p>'+
+  '<ul>'+
+  '<li><b>The weekly travel total collapses.</b> Wanstead was 9.6 hours a week between you on a five-and-two split. On two-and-three it is '+
+  '<b>7.3 hours</b>. That is most of a working day back, and it is the strongest argument for spending the slack on somewhere nicer rather '+
+  'than somewhere closer.</li>'+
+  '<li><b>Neither commute dominates any more.</b> At five days against two it was right to let Tisha\\u2019s journey outvote yours. At two '+
+  'against three they weigh almost equally, so an area that is excellent for one of you and grim for the other no longer averages out into '+
+  'looking acceptable. Every card now carries a <b>balance</b> reading, and the score takes points off for a lopsided pair.</li>'+
+  '<li><b>Tisha\\u2019s 45-minute ceiling deserves revisiting.</b> She set it when this looked like a five-day commute. Relaxing to '+
+  '55 minutes for her and 70 for you <b>doubles</b> the parkable options inside budget, from 12 to 25 — and brings in places like '+
+  '<b>Brentwood</b> (£1,650, and a 5 out of 5 for walkability, green space and parking alike) that are simply better places to live.</li>'+
+  '</ul>'+
+  '<p>There is a <b>Hybrid</b> button on the priorities panel that re-weights for this: commute down to 3, walkability and green space up '+
+  'to 5, value up to 4. It is not a different answer so much as a different question — what you would want if you were picking for the '+
+  'ten days a month you are at home rather than the five you are not.</p>'+
+  '<p>Two results worth putting side by side. On the <b>default weighting</b>, <b>Wanstead</b> comes top at every ceiling I tried — '+
+  '45/60, 55/70 and 60/75 — so relaxing the limits does not change that pick, it just adds alternatives behind it. '+
+  'But press <b>Hybrid</b> and <b>Brentwood overtakes it</b>, 83% to 81%.</p>'+
+  '<p>That disagreement is the useful part, and it is not noise. The two weightings are answering different questions. '+
+  'Weight the commute heavily and you get Wanstead: the best compromise between two journeys. Weight the place you actually live in '+
+  'and you get Brentwood: thirteen minutes further out for Tisha, £250 a month cheaper, and a five out of five for walkability, '+
+  'green space and parking at once — which nothing else on this list manages. '+
+  '<b>Which is right depends on something the model cannot tell you</b>: whether five commuting days a week between you feels like '+
+  'a lot or a little. That is worth settling between yourselves before you view anything.</p>'+
+
   '<h3>Two commutes is a different problem, not a bigger one</h3>'+
   '<p>A single-destination optimiser cannot answer this. Adding a second office does not just add a column — it changes which '+
   'corridors are good, because the two offices reward completely different geography.</p>'+
@@ -1883,7 +1938,7 @@ function renderMethod(){
   'and the Mildmay line runs to <b>Stratford</b> and <b>Highbury &amp; Islington</b>. So the second commute rewards being able to reach '+
   'Stratford or Highbury quickly, which is a different map entirely.</li>'+
   '</ul>'+
-  '<p><b>The clearest casualty is Upminster.</b> It was the top recommendation for four rounds — 39 minutes to Aldgate, a driveway with '+
+  '<p><b>The clearest casualty is Upminster.</b> It was the top recommendation for several rounds — 39 minutes to Aldgate, a driveway with '+
   'every house, well inside budget. Its commute to N7 is <b>72 minutes</b>, the worst on this entire list. It is superb at one of your two '+
   'journeys and hopeless at the other, and that is not a compromise, it is a veto.</p>'+
   '<p><b>The winner is the Central line, for a structural reason.</b> Wanstead, Snaresbrook, South Woodford, Wood Street and Highams Park '+
@@ -1972,21 +2027,25 @@ function renderMethod(){
   '</ul>'+
 
   '<h3>If you want the short answer</h3>'+
-  '<p><b>Wanstead.</b> Two rounds ago it was the pick, then real sold prices ruled it out on a £935k median, then renting made that irrelevant, '+
-  'and now a second commute makes it the only parkable area that survives the joint frontier. 39 minutes for Tisha, 47 for you, about '+
-  '£1,900 a month, streets you can park on, Epping Forest at the end of the road. It has arrived at the top by four different routes.</p>'+
-  '<p><b>The others worth viewing,</b> all of which clear both ceilings and are parkable: <b>Wood Street</b> (40/49, £1,700) is the value pick '+
-  'and quietly good; <b>Snaresbrook</b> (41/49, £1,900) is the same trains with bigger houses; <b>South Woodford</b> (43/51, £1,850) has the '+
-  'easiest parking of the three; <b>Highams Park</b> (44/53, £1,750) is furthest but has the lake and the forest.</p>'+
-  '<p><b>What the second commute kills.</b> <b>Upminster</b> — the pick for four rounds — is 72 minutes to N7 and has to come off. So do '+
-  'Dagenham Heathway (70), Gallions Reach (72), and most of south-east London: Blackheath 63, Woolwich 62, Greenwich 62. Anything reached '+
-  'through Fenchurch Street or Cannon Street is now working against you.</p>'+
-  '<p><b>And if the car were negotiable</b>, the joint frontier is <b>Forest Gate</b> (29/43, 7.7 h a week between you), '+
-  '<b>Walthamstow Central</b> (36/38) and <b>Tottenham Hale</b> (38/34) — all better on pure travel time than anything you can park at, '+
-  'and all effectively car-free. That is the real trade you are making, and it is worth about two hours a week.</p>'+
-  '<p><b>If Wayve does not convert</b>, switch off “plan for two commutes” and the earlier answer returns: Upminster, Wanstead and '+
-  'Highams Park, with Upminster back on top. Worth knowing before you sign a two-year tenancy on the strength of a job you have not been '+
-  'offered yet.</p>'+
+  '<p><b>It now depends on a question only you can answer</b>, and the two answers are close enough that both are defensible.</p>'+
+  '<p><b>If the commute still leads: Wanstead.</b> 39 minutes for Tisha, 47 for you, evenly split, about £1,900 a month, streets you can '+
+  'park on, Epping Forest at the end of the road. It is the only parkable area that survives the joint frontier, and it tops the default '+
+  'weighting at every ceiling I tried.</p>'+
+  '<p><b>If the neighbourhood leads: Brentwood.</b> Press Hybrid and it overtakes Wanstead. It is 52 and 66 minutes — over both ceilings as '+
+  'they stand — but £1,650 a month, and the only area on this list scoring five out of five for walkability, green space and parking '+
+  'simultaneously. With five commuting days a week between two people, paying thirteen extra minutes on the days you travel to get a better '+
+  'place on the days you do not is a real argument, not a compromise.</p>'+
+  '<p><b>The realistic viewing list,</b> all parkable and inside budget: <b>Wanstead</b> (39/47, £1,900) · <b>Highams Park</b> (44/53, £1,750) · '+
+  '<b>South Woodford</b> (43/51, £1,850) · <b>Romford</b> (44/58, £1,550) · <b>Shenfield</b> (44/60, £1,800).</p>'+
+  '<p><b>The one worth a serious look if you relax the ceiling:</b> <b>Brentwood</b>, at 52 and 66 minutes. Over both limits as they stand — '+
+  'but £1,650, and a five out of five for walkability, green space <em>and</em> parking, which nothing else on this list manages. '+
+  'With five commuting days a week between you, that is a genuinely defensible trade rather than a compromise. '+
+  '<b>Forest Hill</b> (45/61, £1,900) is the same argument on the other side of London.</p>'+
+  '<p><b>If the car were negotiable</b>, <b>Forest Gate</b> (29/43) and <b>Walthamstow Central</b> (36/38) beat everything above on travel time '+
+  'and cost about the same. Keeping the car is now worth roughly an hour a week rather than two — the case for it got weaker along with '+
+  'the commute.</p>'+
+  '<p><b>And if Wayve does not convert</b>, switch off “plan for two commutes”. Upminster returns to the top, because nothing else on this '+
+  'page beats it for a single Aldgate commute. Do not sign a two-year tenancy against the two-commute answer until you have the offer.</p>'+
   '</div>';
 }
 

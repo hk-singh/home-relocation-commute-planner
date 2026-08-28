@@ -1,7 +1,7 @@
 # Aldgate Relocation & Commute Planner
 
 A single-file tool for choosing where to live when **two people commute to two different offices**
-on different days: **Portsoken House, EC3N** (Aldgate, 5 days) and **3 Brandon Road, N7** (2 days).
+on different days: **Portsoken House, EC3N** (Aldgate, 2 days) and **3 Brandon Road, N7** (3 days).
 The second is a scenario you can switch off.
 
 Open `index.html` in any browser. No build, no server, no dependencies.
