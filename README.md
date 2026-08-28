@@ -1,7 +1,8 @@
 # Aldgate Relocation & Commute Planner
 
-A single-file tool for choosing where to live around a job at **Portsoken House, 155–157
-Minories, London EC3N 1LJ** — the eastern edge of the City, by Aldgate.
+A single-file tool for choosing where to live when **two people commute to two different offices**
+on different days: **Portsoken House, EC3N** (Aldgate, 5 days) and **3 Brandon Road, N7** (2 days).
+The second is a scenario you can switch off.
 
 Open `index.html` in any browser. No build, no server, no dependencies.
 
@@ -44,6 +45,15 @@ good signal of how an area is regarded.
 Everything is adjustable — the time ceiling, how far you'll walk to a station, the interchange
 penalty, the rent cap, and how much each of the four priorities counts. Settings and shortlist
 persist in `localStorage`.
+
+## Two offices reward opposite geography
+
+Aldgate rewards Liverpool Street (9 min walk) and Fenchurch Street (5 min) — so, east and Essex.
+3 Brandon Road N7 is 620 yards from Caledonian Road & Barnsbury on the **Mildmay line**, which runs
+to **Stratford** and **Highbury**. Very few corridors serve both.
+
+Upminster is the clearest casualty: 39 minutes to Aldgate and **72** to N7. The Central line wins
+instead, because it reaches Stratford in minutes *and* Liverpool Street directly.
 
 ## The finding that shaped it
 

@@ -459,6 +459,51 @@ median house price against a £750k budget. Renting removes that barrier complet
 straight back onto the shortlist at about £1,900 a month. Two rounds, two reversals, both driven by
 finding out something true rather than by thinking harder about what I already had.
 
+### When the objective function changes shape
+
+The last twist was the biggest: a second job, a second office, two days a week. My first instinct
+was that this was a parameter change — add a column, weight it, re-rank. It wasn't. **It changed
+which corridors are good at all.**
+
+The two offices reward opposite geography, and you can see exactly why from one fact each:
+
+- **Aldgate** is a 9-minute walk from Liverpool Street and a 5-minute walk from Fenchurch Street.
+  That points east: Essex, c2c, the Central line.
+- **3 Brandon Road, N7** is 620 yards from Caledonian Road & Barnsbury, which is on the **Mildmay
+  line** — and the Mildmay line runs to **Stratford** and **Highbury & Islington**. That points at a
+  completely different map.
+
+So the thing that had been winning for four rounds died. **Upminster**: 39 minutes to Aldgate,
+driveway with every house, inside budget — and **72 minutes** to N7, the worst on the list. That's
+not a compromise you trade off against something. It's a veto.
+
+What replaced it did so for a structural reason worth understanding rather than just recording: the
+**Central line reaches Stratford in minutes and Liverpool Street directly**, which is the rare
+double connection that serves both offices. Run the joint Pareto frontier over only the areas where
+a tenancy would actually let you keep a car, and exactly one survives — Wanstead — because it beats
+every other parkable area on *both* journeys simultaneously.
+
+**Lessons:**
+
+1. **Adding an objective is not the same as adding a column.** A single-destination optimiser
+   doesn't become a two-destination one by averaging. The set of good answers changes, because
+   "good" was defined relative to one geography and there are now two. When someone adds a
+   constraint, check whether your *search space* is still the right one — not just your scoring.
+2. **Pareto frontiers earn their keep the moment there are two objectives.** With one axis you can
+   just sort. With two, "best" is genuinely ambiguous, and the frontier is the honest answer:
+   here is the set nothing else beats on both; everything else is dominated. It also made the
+   parking constraint legible — the unrestricted frontier is three areas you can't park at, and
+   restricting it collapses to one.
+3. **Model the uncertainty, don't resolve it.** The job isn't offered yet — it's a final-round
+   interview. Baking it in would have been wrong, and ignoring it would have been wrong. So it's a
+   switch, defaulted on, with the single-commute ranking one click away. Tools that plan around
+   uncertain futures should let you *see both futures*, not pick one for you.
+
+Which makes four reversals across this project, every one caused by learning something rather than
+thinking harder: a terminus walk table, real sold prices, a renting-versus-buying premise, and a
+second office. The tool got better each time it was told it was wrong — which is the only
+real argument for building the thing as a model rather than as an opinion.
+
 ---
 
 ## Things I chose not to build, and why

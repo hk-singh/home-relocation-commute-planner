@@ -171,6 +171,13 @@ select{
 .legend span{display:inline-flex; align-items:center; gap:5px}
 .legend i{width:11px; height:9px; border-radius:2px; display:inline-block}
 
+.twotimes{display:flex; gap:16px; align-items:flex-start; justify-content:flex-end}
+.onetime{display:flex; flex-direction:column; align-items:flex-end; gap:1px}
+.wholabel{font-family:"Barlow Semi Condensed",Arial,sans-serif; font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-4); font-weight:600; white-space:nowrap}
+.matchwrap .wk{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-4); margin-left:2px}
+.striplab{font-family:"Barlow Semi Condensed",Arial,sans-serif; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); margin-bottom:2px}
+.striplab.second{margin-top:16px; padding-top:13px; border-top:1px dashed var(--line)}
+
 /* ---------- traits ---------- */
 .traits{display:grid; grid-template-columns:repeat(auto-fit,minmax(112px,1fr)); gap:1px; background:var(--line-soft); border-top:1px solid var(--line-soft)}
 .trait{background:var(--surface); padding:9px 13px}
@@ -267,14 +274,14 @@ td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
   <div class="wrap" style="padding-bottom:0">
     <div class="masthead">
       <div>
-        <h1>Getting to Aldgate in <em>45 minutes</em></h1>
-        <p class="sub">Every area below is scored on the four things that actually matter to you: door-to-door commute, somewhere to put the car, a neighbourhood worth walking around, and green space. Move the sliders until the ranking argues with you.</p>
+        <h1>Getting <em>both</em> of you to work</h1>
+        <p class="sub">Two offices, on opposite sides of the city, with different numbers of days. Every area is scored on both commutes, whether a tenancy would let you park, and whether the neighbourhood is worth living in. Move the sliders until the ranking argues with you.</p>
       </div>
       <div class="anchor">
         <span class="dot" aria-hidden="true"></span>
         <span>
-          <b>The office</b>
-          <span>Portsoken House, 155–157 Minories, EC3N 1LJ</span>
+          <b>Two destinations</b>
+          <span>Portsoken House EC3N · 3 Brandon Road N7</span>
         </span>
       </div>
     </div>
@@ -282,7 +289,7 @@ td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
       <button class="tab" role="tab" data-tab="explore" aria-selected="true">Explore<span class="n" id="tab-n-explore"></span></button>
       <button class="tab" role="tab" data-tab="compare" aria-selected="false">Shortlist<span class="n" id="tab-n-short"></span></button>
       <button class="tab" role="tab" data-tab="map" aria-selected="false">Time map</button>
-      <button class="tab" role="tab" data-tab="prices" aria-selected="false">Prices</button>
+      <button class="tab" role="tab" data-tab="prices" aria-selected="false">Trade-offs</button>
       <button class="tab" role="tab" data-tab="method" aria-selected="false">How this works</button>
     </div>
   </div>
@@ -304,7 +311,9 @@ td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
             <span class="eyebrow">Sort</span>
             <select id="sortSel" style="width:auto">
               <option value="match">Best overall match</option>
-              <option value="time">Fastest door to door</option>
+              <option value="time">Fastest for Tisha</option>
+              <option value="weekly">Least travel per week, both of you</option>
+              <option value="fair">Fairest — best worst-case</option>
               <option value="parking">Easiest parking</option>
               <option value="walk">Most walkable</option>
               <option value="green">Most green space</option>
@@ -347,7 +356,9 @@ const LINES = {
   southeast: { name:"Southeastern",      c:"#3A6FB0" },
   greatanglia:{ name:"Greater Anglia fast", c:"#1F4E79" },
   hs1:       { name:"Southeastern High Speed", c:"#3C3B6E" },
-  mildmay:   { name:"Mildmay line",      c:"#0077AD" }
+  mildmay:   { name:"Mildmay line",      c:"#0077AD" },
+  northern:  { name:"Northern line",     c:"#33383D" },
+  piccadilly:{ name:"Piccadilly line",   c:"#10069F" }
 };
 
 /* Where you get off, and how long the final walk to Portsoken House is.
@@ -360,7 +371,29 @@ const TERMINI = {
   aldgateE:  { name:"Aldgate East",      walk:6,  note:"West along Whitechapel High Street" },
   towerhill: { name:"Tower Hill",        walk:6,  note:"North up Minories" },
   liverpool: { name:"Liverpool Street",  walk:9,  note:"South through Aldgate" },
-  cannon:    { name:"Cannon Street",     walk:14, note:"East along Eastcheap" }
+  cannon:    { name:"Cannon Street",     walk:14, note:"East along Eastcheap" },
+  /* --- and for the second office, at 3 Brandon Road N7 --- */
+  calbarn:   { name:"Caledonian Rd & Barnsbury", walk:7,  note:"620 yards down the road" },
+  calroad:   { name:"Caledonian Road",   walk:8,  note:"660m via the Cally" },
+  kingscross:{ name:"King's Cross St Pancras", walk:18, note:"A long walk north up York Way" }
+};
+
+/* ============================================================================
+   1b. THE SECOND OFFICE
+   Two people, two destinations, different numbers of days. Tisha is at
+   Portsoken House five days a week; the Wayve role is 3 Brandon Road N7, two
+   days a week, and is not confirmed yet — so it is a scenario you can switch
+   off, not a fact baked into the model.
+
+   The geometry is completely different, and that is the whole point. Brandon
+   Road's nearest station is Caledonian Road & Barnsbury on the MILDMAY line,
+   which runs to STRATFORD. So the second commute rewards being able to reach
+   Stratford or Highbury quickly — while the first rewards Liverpool Street and
+   Fenchurch Street. Very few places are good at both.
+   ========================================================================== */
+const DESTS = {
+  a: { who:"Tisha", office:"Portsoken House, EC3N", short:"Aldgate", days:5 },
+  b: { who:"You",   office:"3 Brandon Road, N7",   short:"Wayve",   days:2 }
 };
 
 /* ============================================================================
@@ -374,355 +407,355 @@ const TERMINI = {
    ========================================================================== */
 const AREAS = [
 /* --- Central line, the Epping Forest side ------------------------------- */
-{id:"wanstead", name:"Wanstead", loc:"E11 · Redbridge", stn:"Wanstead", legs:[{line:"central", ride:20}], term:"liverpool", head:4, ch:0, brg:42, lat:51.5775, lon:0.0288, corr:"central-hainault",
+{id:"wanstead", name:"Wanstead", loc:"E11 · Redbridge", stn:"Wanstead", legs:[{line:"central", ride:20}], term:"liverpool", head:4, ch:0, w:{legs:[{line:"central", ride:7},{line:"mildmay", ride:18}], term:"calbarn", head:4, ch:1}, brg:42, lat:51.5775, lon:0.0288, corr:"central-hainault",
  parking:4, walk:5, green:5, amen:4, rent:1900, boro:"Redbridge", tenantPark:4, tenantNote:"Mostly Victorian and inter-war houses; permits available and many have front hardstanding.", buy:700000,
  vibe:"The strongest all-rounder on this list: a genuine village high street on George Green, Epping Forest at the end of the road, and Victorian streets wide enough to park on.",
  watch:"You pay for it — Wanstead is the priciest of the Redbridge Central-line stops, and the good streets go fast.",
  park:"Wanstead Park, Wanstead Flats, Epping Forest"},
 
-{id:"snaresbrook", name:"Snaresbrook", loc:"E11 · Redbridge", stn:"Snaresbrook", legs:[{line:"central", ride:22}], term:"liverpool", head:4, ch:0, brg:38, lat:51.5808, lon:0.0216, corr:"central-epping",
+{id:"snaresbrook", name:"Snaresbrook", loc:"E11 · Redbridge", stn:"Snaresbrook", legs:[{line:"central", ride:22}], term:"liverpool", head:4, ch:0, w:{legs:[{line:"central", ride:9},{line:"mildmay", ride:18}], term:"calbarn", head:4, ch:1}, brg:38, lat:51.5808, lon:0.0216, corr:"central-epping",
  parking:4, walk:3, green:5, amen:3, rent:1900, boro:"Redbridge", tenantPark:5, tenantNote:"Large houses, drives the norm, little controlled parking.", buy:725000,
  vibe:"Wanstead's quieter neighbour. Eagle Pond and the forest on the doorstep, big detached houses, and a station most people have never heard of.",
  watch:"Almost no high street of its own — you walk or drive to Wanstead or South Woodford for anything.",
  park:"Eagle Pond, Epping Forest, Hollow Ponds"},
 
-{id:"southwoodford", name:"South Woodford", loc:"E18 · Redbridge", stn:"South Woodford", legs:[{line:"central", ride:24}], term:"liverpool", head:4, ch:0, brg:35, lat:51.5917, lon:0.0275, corr:"central-epping",
+{id:"southwoodford", name:"South Woodford", loc:"E18 · Redbridge", stn:"South Woodford", legs:[{line:"central", ride:24}], term:"liverpool", head:4, ch:0, w:{legs:[{line:"central", ride:11},{line:"mildmay", ride:18}], term:"calbarn", head:4, ch:1}, brg:35, lat:51.5917, lon:0.0275, corr:"central-epping",
  parking:5, walk:4, green:4, amen:4, rent:1850, boro:"Redbridge", tenantPark:5, tenantNote:"Drives come with most rentals here.", buy:680000,
  vibe:"Driveways are standard rather than lucky. George Lane has the cafés and the Sainsbury's, and the forest is a ten-minute walk north.",
  watch:"The A406 North Circular cuts through — check which side of it a property sits on before you fall in love with it.",
  park:"Epping Forest, Ray Park, Elmhurst Gardens"},
 
-{id:"woodford", name:"Woodford", loc:"IG8 · Redbridge", stn:"Woodford", legs:[{line:"central", ride:26}], term:"liverpool", head:5, ch:0, brg:33, lat:51.607, lon:0.0341, corr:"central-epping",
+{id:"woodford", name:"Woodford", loc:"IG8 · Redbridge", stn:"Woodford", legs:[{line:"central", ride:26}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"central", ride:13},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:33, lat:51.607, lon:0.0341, corr:"central-epping",
  parking:5, walk:3, green:5, amen:3, rent:1800, boro:"Redbridge", tenantPark:5, tenantNote:"Suburban houses; a drive is usually part of the let.", buy:675000,
  vibe:"Woodford Green is properly leafy — cricket on the green, forest on three sides, and the easiest parking of any Central-line stop this close in.",
  watch:"Spread out and car-dependent for shopping; the station is a hike from much of the housing stock.",
  park:"Epping Forest, Woodford Green, Highams Park Lake"},
 
-{id:"leytonstone", name:"Leytonstone", loc:"E11 · Waltham Forest", stn:"Leytonstone", legs:[{line:"central", ride:19}], term:"liverpool", head:3, ch:0, brg:32, lat:51.5683, lon:0.0083, corr:"central-epping",
+{id:"leytonstone", name:"Leytonstone", loc:"E11 · Waltham Forest", stn:"Leytonstone", legs:[{line:"central", ride:19}], term:"liverpool", head:3, ch:0, w:{legs:[{line:"central", ride:6},{line:"mildmay", ride:18}], term:"calbarn", head:3, ch:1}, brg:32, lat:51.5683, lon:0.0083, corr:"central-epping",
  parking:3, walk:4, green:4, amen:4, rent:1800, boro:"Waltham Forest", tenantPark:3, tenantNote:"Controlled zones over much of it; permits available to tenants but terraces rarely have off-street space.", buy:575000,
  vibe:"Church Lane and the streets around Hollow Ponds have quietly become one of east London's better pockets, with Wanstead Flats a short walk away and Leyton's Francis Road one stop down the line.",
  watch:"Controlled parking across much of it, and the streets nearest the station are tight.",
  park:"Wanstead Flats, Hollow Ponds, Epping Forest"},
 
-{id:"gantshill", name:"Gants Hill", loc:"IG2 · Redbridge", stn:"Gants Hill", legs:[{line:"central", ride:24}], term:"liverpool", head:5, ch:0, brg:50, lat:51.5765, lon:0.0663, corr:"central-hainault",
+{id:"gantshill", name:"Gants Hill", loc:"IG2 · Redbridge", stn:"Gants Hill", legs:[{line:"central", ride:24}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"central", ride:11},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:50, lat:51.5765, lon:0.0663, corr:"central-hainault",
  parking:4, walk:3, green:4, amen:3, rent:1650, boro:"Redbridge", tenantPark:4, tenantNote:"Semis with drives are common and controlled parking is light.", buy:560000,
  vibe:"Valentines Park is one of the best parks in outer London and barely anyone outside Ilford talks about it. Solid family housing, sensible prices.",
  watch:"The Gants Hill roundabout is a genuinely unpleasant piece of road to live beside.",
  park:"Valentines Park, Wanstead Park, Claybury Park"},
 
-{id:"redbridge", name:"Redbridge", loc:"IG4 · Redbridge", stn:"Redbridge", legs:[{line:"central", ride:22}], term:"liverpool", head:5, ch:0, brg:45, lat:51.5763, lon:0.0454, corr:"central-hainault",
+{id:"redbridge", name:"Redbridge", loc:"IG4 · Redbridge", stn:"Redbridge", legs:[{line:"central", ride:22}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"central", ride:9},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:45, lat:51.5763, lon:0.0454, corr:"central-hainault",
  parking:5, walk:3, green:4, amen:2, rent:1700, boro:"Redbridge", tenantPark:5, tenantNote:"Garages and drives almost everywhere.", buy:600000,
  vibe:"Wide inter-war streets, garages and driveways almost everywhere, and Wanstead Park a walk away. Purely residential.",
  watch:"Thin on shops and places to eat — this is a commute-and-park choice, not a walkable-life choice.",
  park:"Wanstead Park, Valentines Park, Roding Valley"},
 
-{id:"buckhursthill", name:"Buckhurst Hill", loc:"IG9 · Epping Forest", stn:"Buckhurst Hill", legs:[{line:"central", ride:30}], term:"liverpool", head:6, ch:0, brg:28, lat:51.6266, lon:0.0471, corr:"central-epping",
+{id:"buckhursthill", name:"Buckhurst Hill", loc:"IG9 · Epping Forest", stn:"Buckhurst Hill", legs:[{line:"central", ride:30}], term:"liverpool", head:6, ch:0, w:{legs:[{line:"central", ride:17},{line:"mildmay", ride:18}], term:"calbarn", head:6, ch:1}, brg:28, lat:51.6266, lon:0.0471, corr:"central-epping",
  parking:5, walk:4, green:5, amen:3, rent:1900, boro:"Epping Forest", tenantPark:5, tenantNote:"Outside London's permit regime; drives standard.", buy:760000,
  vibe:"Queen's Road is a genuinely nice boutique high street and the forest is immediate. Essex-adjacent in the good way.",
  watch:"Over the 45 on a normal day. Also outside London for council tax and school catchments.",
  park:"Epping Forest, Roding Valley Meadows, Knighton Wood"},
 
 /* --- Overground: Weaver line into Liverpool Street ---------------------- */
-{id:"walthamstow", name:"Walthamstow Central", loc:"E17 · Waltham Forest", stn:"Walthamstow Central", legs:[{line:"weaver", ride:15}], term:"liverpool", head:8, ch:0, brg:8, lat:51.5829, lon:-0.0197, corr:"weaver-chingford",
+{id:"walthamstow", name:"Walthamstow Central", loc:"E17 · Waltham Forest", stn:"Walthamstow Central", legs:[{line:"weaver", ride:15}], term:"liverpool", head:8, ch:0, w:{legs:[{line:"victoria", ride:13},{line:"mildmay", ride:3}], term:"calbarn", head:3, ch:1}, brg:8, lat:51.5829, lon:-0.0197, corr:"weaver-chingford",
  parking:3, walk:5, green:5, amen:5, rent:1950, boro:"Waltham Forest", tenantPark:3, tenantNote:"Controlled zones borough-wide and emissions-priced permits, but tenants in older stock can get one.", buy:650000,
  vibe:"Probably the best amenity-to-price ratio in this whole list. The Village, Lloyd Park, the Wetlands, the market, and a Victoria line escape hatch if the Overground sulks.",
  watch:"Parking is the weak spot — most of it is controlled, and permits are priced on emissions. Check your car's band before committing.",
  park:"Lloyd Park, Walthamstow Wetlands, Epping Forest edge"},
 
-{id:"stjames", name:"St James Street", loc:"E17 · Waltham Forest", stn:"St James Street", legs:[{line:"weaver", ride:13}], term:"liverpool", head:8, ch:0, brg:5, lat:51.5827, lon:-0.0335, corr:"weaver-chingford",
+{id:"stjames", name:"St James Street", loc:"E17 · Waltham Forest", stn:"St James Street", legs:[{line:"weaver", ride:13}], term:"liverpool", head:8, ch:0, w:{legs:[{line:"weaver", ride:2},{line:"victoria", ride:13},{line:"mildmay", ride:3}], term:"calbarn", head:8, ch:2}, brg:5, lat:51.5827, lon:-0.0335, corr:"weaver-chingford",
  parking:3, walk:4, green:4, amen:4, rent:1750, boro:"Waltham Forest", tenantPark:3, tenantNote:"Permit available to tenants; almost nothing off-street.", buy:560000,
  vibe:"Walthamstow's cheaper half, with the Wetlands and the Blackhorse Lane breweries within walking distance and the same trains.",
  watch:"Rougher around the edges than the Village end, and the same controlled-parking problem.",
  park:"Walthamstow Wetlands, Lloyd Park, St James Park"},
 
-{id:"woodstreet", name:"Wood Street", loc:"E17 · Waltham Forest", stn:"Wood Street", legs:[{line:"weaver", ride:18}], term:"liverpool", head:10, ch:0, brg:18, lat:51.5866, lon:-0.0012, corr:"weaver-chingford",
+{id:"woodstreet", name:"Wood Street", loc:"E17 · Waltham Forest", stn:"Wood Street", legs:[{line:"weaver", ride:18}], term:"liverpool", head:10, ch:0, w:{legs:[{line:"weaver", ride:3},{line:"victoria", ride:13},{line:"mildmay", ride:3}], term:"calbarn", head:10, ch:2}, brg:18, lat:51.5866, lon:-0.0012, corr:"weaver-chingford",
  parking:4, walk:3, green:4, amen:3, rent:1700, boro:"Waltham Forest", tenantPark:4, tenantNote:"More houses with side access than the rest of E17.", buy:570000,
  vibe:"Quieter, more houses than flats, forest at the top of the hill, and a small parade with an unreasonably good indoor market.",
  watch:"Fewer trains than Walthamstow Central and no tube backup if the line goes down.",
  park:"Epping Forest, Lloyd Park, Higham Hill Rec"},
 
-{id:"highamspark", name:"Highams Park", loc:"E4 · Waltham Forest", stn:"Highams Park", legs:[{line:"weaver", ride:21}], term:"liverpool", head:12, ch:0, brg:15, lat:51.6086, lon:-0.0009, corr:"weaver-chingford",
+{id:"highamspark", name:"Highams Park", loc:"E4 · Waltham Forest", stn:"Highams Park", legs:[{line:"weaver", ride:21}], term:"liverpool", head:12, ch:0, w:{legs:[{line:"weaver", ride:6},{line:"victoria", ride:13},{line:"mildmay", ride:3}], term:"calbarn", head:12, ch:2}, brg:15, lat:51.6086, lon:-0.0009, corr:"weaver-chingford",
  parking:5, walk:4, green:5, amen:3, rent:1750, boro:"Waltham Forest", tenantPark:5, tenantNote:"Drives are standard and controlled parking is minimal.", buy:585000,
  vibe:"A lake, a chunk of Epping Forest, driveways as standard and a small high street that has grown up a lot. Quietly one of the best value-for-life picks here.",
  watch:"Trains every 12–15 minutes rather than every 3 — miss one and you feel it. That platform wait is already in the number below.",
  park:"Highams Park Lake, Epping Forest, Larkswood"},
 
-{id:"chingford", name:"Chingford", loc:"E4 · Waltham Forest", stn:"Chingford", legs:[{line:"weaver", ride:26}], term:"liverpool", head:12, ch:0, brg:12, lat:51.6329, lon:0.0089, corr:"weaver-chingford",
+{id:"chingford", name:"Chingford", loc:"E4 · Waltham Forest", stn:"Chingford", legs:[{line:"weaver", ride:26}], term:"liverpool", head:12, ch:0, w:{legs:[{line:"weaver", ride:11},{line:"victoria", ride:13},{line:"mildmay", ride:3}], term:"calbarn", head:12, ch:2}, brg:12, lat:51.6329, lon:0.0089, corr:"weaver-chingford",
  parking:5, walk:4, green:5, amen:3, rent:1750, boro:"Waltham Forest", tenantPark:5, tenantNote:"Suburban houses with drives; the easiest in the borough.", buy:600000,
  vibe:"Forest on the doorstep in a way nowhere else on this list can match, proper houses with drives, and a station you can get a seat at because it's the terminus.",
  watch:"Comes out just over the 45 once you add the platform wait and the walk from Liverpool Street. Worth a real-world test run before you rule it in or out.",
  park:"Epping Forest, Ridgeway Park, Chingford Plain"},
 
-{id:"stokenewington", name:"Stoke Newington", loc:"N16 · Hackney", stn:"Stoke Newington", legs:[{line:"weaver", ride:12}], term:"liverpool", head:8, ch:0, brg:350, lat:51.5606, lon:-0.0729, corr:"weaver-enfield",
+{id:"stokenewington", name:"Stoke Newington", loc:"N16 · Hackney", stn:"Stoke Newington", legs:[{line:"weaver", ride:12}], term:"liverpool", head:8, ch:0, w:{legs:[{line:"weaver", ride:3},{line:"mildmay", ride:9}], term:"calbarn", head:8, ch:1}, brg:350, lat:51.5606, lon:-0.0729, corr:"weaver-enfield",
  parking:1, walk:5, green:5, amen:5, rent:2500, boro:"Hackney", tenantPark:1, tenantNote:"Hackney operates a car-free development register, and even outside it permits are heavily oversubscribed. Assume no parking.", buy:850000,
  vibe:"Church Street is one of the best walkable high streets in London, Clissold Park is lovely, and the commute is short.",
  watch:"Parking here is genuinely painful — Hackney permits, narrow Victorian streets, high demand. If the car is non-negotiable, this is the wrong postcode.",
  park:"Clissold Park, Abney Park Cemetery, Springfield Park"},
 
-{id:"bushhill", name:"Bush Hill Park", loc:"EN1 · Enfield", stn:"Bush Hill Park", legs:[{line:"weaver", ride:24}], term:"liverpool", head:15, ch:0, brg:355, lat:51.641, lon:-0.068, corr:"weaver-enfield",
+{id:"bushhill", name:"Bush Hill Park", loc:"EN1 · Enfield", stn:"Bush Hill Park", legs:[{line:"weaver", ride:24}], term:"liverpool", head:15, ch:0, w:{legs:[{line:"weaver", ride:12},{line:"victoria", ride:4},{line:"mildmay", ride:3}], term:"calbarn", head:15, ch:2}, brg:355, lat:51.641, lon:-0.068, corr:"weaver-enfield",
  parking:5, walk:3, green:4, amen:3, rent:1650, boro:"Enfield", tenantPark:5, tenantNote:"Edwardian houses with drives and light controls.", buy:520000,
  vibe:"Big Edwardian houses for the money, wide streets, and Enfield Town's shops a short hop away.",
  watch:"Infrequent trains push it past the limit, and it's a long way from anyone you know in east London.",
  park:"Bush Hill Park, Town Park, Lee Valley"},
 
 /* --- c2c into Fenchurch Street: the five-minute-walk trick --------------- */
-{id:"upminster", name:"Upminster", loc:"RM14 · Havering", stn:"Upminster", legs:[{line:"c2c", ride:22}], term:"fenchurch", head:8, ch:0, brg:78, lat:51.5589, lon:0.251, corr:"c2c",
+{id:"upminster", name:"Upminster", loc:"RM14 · Havering", stn:"Upminster", legs:[{line:"c2c", ride:22}], term:"fenchurch", head:8, ch:0, w:{legs:[{line:"c2c", ride:22},{line:"circle", ride:15}], term:"kingscross", head:8, ch:1}, brg:78, lat:51.5589, lon:0.251, corr:"c2c",
  parking:5, walk:4, green:4, amen:4, rent:1700, boro:"Havering", tenantPark:5, tenantNote:"A drive comes with almost every house let here.", buy:575000,
  vibe:"The surprise of the whole exercise. Twenty-two minutes to Fenchurch Street and then a five-minute walk — so a town at the far edge of the map lands inside the limit with room to spare. Driveways everywhere, a real high street, and the District line as backup.",
  watch:"It is a long way out. Everything social becomes a planned trip rather than a spontaneous one.",
  park:"Upminster Park, Hornchurch Country Park, Upminster Windmill"},
 
-{id:"barking", name:"Barking", loc:"IG11 · Barking & Dagenham", stn:"Barking", legs:[{line:"c2c", ride:15}], term:"fenchurch", head:10, ch:0, brg:80, lat:51.5394, lon:0.081, corr:"c2c",
+{id:"barking", name:"Barking", loc:"IG11 · Barking & Dagenham", stn:"Barking", legs:[{line:"c2c", ride:15}], term:"fenchurch", head:10, ch:0, w:{legs:[{line:"hc", ride:30}], term:"kingscross", head:6, ch:0}, brg:80, lat:51.5394, lon:0.081, corr:"c2c",
  parking:3, walk:3, green:3, amen:3, rent:1600, boro:"Barking and Dagenham", tenantPark:2, tenantNote:"The riverside developments are car-free by planning condition \u2014 tenants there cannot get a permit at all. Older terraces can.", buy:450000,
  vibe:"Four different ways into town from one station, serious regeneration money, and the cheapest fast commute on this list.",
  watch:"The town centre is a work in progress and the housing stock nearest the station is mostly flats.",
  park:"Barking Park, Abbey Green, Eastbrookend Country Park"},
 
-{id:"dagenhamheathway", name:"Dagenham Heathway", loc:"RM9 · Barking & Dagenham", stn:"Dagenham Heathway", legs:[{line:"district", ride:27}], term:"aldgateE", head:5, ch:0, brg:82, lat:51.5417, lon:0.147, corr:"district-east",
+{id:"dagenhamheathway", name:"Dagenham Heathway", loc:"RM9 · Barking & Dagenham", stn:"Dagenham Heathway", legs:[{line:"district", ride:27}], term:"aldgateE", head:5, ch:0, w:{legs:[{line:"district", ride:22},{line:"hc", ride:14}], term:"kingscross", head:5, ch:1}, brg:82, lat:51.5417, lon:0.147, corr:"district-east",
  parking:5, walk:3, green:4, amen:3, rent:1500, boro:"Barking and Dagenham", tenantPark:5, tenantNote:"Becontree estate houses; gardens, drives and no permit problem.", buy:400000,
  vibe:"The best pounds-per-square-foot on this list by a distance. Becontree estate houses with gardens and off-street parking, and a direct District line train.",
  watch:"Amenities are functional rather than charming, and the District line is slow and can be crowded by the time it reaches you.",
  park:"Central Park, Old Dagenham Park, Eastbrookend"},
 
-{id:"eastham", name:"East Ham", loc:"E6 · Newham", stn:"East Ham", legs:[{line:"district", ride:18}], term:"aldgateE", head:4, ch:0, brg:76, lat:51.5386, lon:0.0518, corr:"district-east",
+{id:"eastham", name:"East Ham", loc:"E6 · Newham", stn:"East Ham", legs:[{line:"district", ride:18}], term:"aldgateE", head:4, ch:0, w:{legs:[{line:"hc", ride:27}], term:"kingscross", head:4, ch:0}, brg:76, lat:51.5386, lon:0.0518, corr:"district-east",
  parking:2, walk:4, green:4, amen:4, rent:1700, boro:"Newham", tenantPark:3, tenantNote:"Controlled zones and heavy demand, but permits are open to tenants in the older stock.", buy:470000,
  vibe:"High Street North is one of the liveliest and best-value shopping streets in London, and Central Park is bigger than people expect.",
  watch:"Parking pressure is high and much of it is controlled — this is the main thing to check street by street.",
  park:"Central Park, Plashet Park, Wanstead Flats"},
 
 /* --- District line, close in -------------------------------------------- */
-{id:"mileend", name:"Mile End", loc:"E3 · Tower Hamlets", stn:"Mile End", legs:[{line:"district", ride:5}], term:"aldgateE", head:3, ch:0, brg:62, lat:51.5252, lon:-0.0334, corr:"district-east",
+{id:"mileend", name:"Mile End", loc:"E3 · Tower Hamlets", stn:"Mile End", legs:[{line:"district", ride:5}], term:"aldgateE", head:3, ch:0, w:{legs:[{line:"hc", ride:14}], term:"kingscross", head:3, ch:0}, brg:62, lat:51.5252, lon:-0.0334, corr:"district-east",
  parking:1, walk:5, green:5, amen:4, rent:2300, boro:"Tower Hamlets", tenantPark:1, tenantNote:"Tower Hamlets runs an extensive car-free register. Most rentals here carry no permit entitlement whatsoever.", buy:650000,
  vibe:"Twenty-two minutes door to door, Victoria Park and Mile End Park either side of you, and the canal to walk along. On commute and walkability alone it wins outright.",
  watch:"Parking is the deal-breaker: Tower Hamlets controlled zones, very high demand, almost no off-street. Only workable if you'd consider giving up the car.",
  park:"Victoria Park, Mile End Park, Regent's Canal"},
 
-{id:"bowroad", name:"Bow Road", loc:"E3 · Tower Hamlets", stn:"Bow Road", legs:[{line:"district", ride:7}], term:"aldgateE", head:3, ch:0, brg:65, lat:51.5269, lon:-0.025, corr:"district-east",
+{id:"bowroad", name:"Bow Road", loc:"E3 · Tower Hamlets", stn:"Bow Road", legs:[{line:"district", ride:7}], term:"aldgateE", head:3, ch:0, w:{legs:[{line:"hc", ride:16}], term:"kingscross", head:3, ch:0}, brg:65, lat:51.5269, lon:-0.025, corr:"district-east",
  parking:2, walk:4, green:5, amen:4, rent:2150, boro:"Tower Hamlets", tenantPark:1, tenantNote:"Same car-free regime as Mile End; assume you cannot park.", buy:600000,
  vibe:"Roman Road market, Victoria Park a walk north, and a commute short enough to come home for lunch.",
  watch:"Same parking problem as Mile End, slightly less acute. Some of the Victorian terraces do have hardstanding.",
  park:"Victoria Park, Mile End Park, Bow Creek"},
 
 /* --- Elizabeth line, east ------------------------------------------------ */
-{id:"stratford", name:"Stratford", loc:"E15/E20 · Newham", stn:"Stratford", legs:[{line:"elizabeth", ride:7}], term:"liverpool", head:4, ch:0, brg:58, lat:51.5416, lon:-0.0035, corr:"elizabeth-east",
+{id:"stratford", name:"Stratford", loc:"E15/E20 · Newham", stn:"Stratford", legs:[{line:"elizabeth", ride:7}], term:"liverpool", head:4, ch:0, w:{legs:[{line:"mildmay", ride:18}], term:"calbarn", head:6, ch:0}, brg:58, lat:51.5416, lon:-0.0035, corr:"elizabeth-east",
  parking:3, walk:4, green:5, amen:5, rent:2200, boro:"Newham", tenantPark:1, tenantNote:"East Village and the Olympic Park developments were built car-free by design. A rental here will almost certainly come with no permit and no space.", buy:600000,
  vibe:"Twenty-six minutes door to door, the Olympic Park on your doorstep, and more shops, pools and cinemas than anywhere else in east London.",
  watch:"Mostly new-build flats. Allocated parking exists but is often sold or rented separately and priced accordingly.",
  park:"Queen Elizabeth Olympic Park, West Ham Park, Wanstead Flats"},
 
-{id:"forestgate", name:"Forest Gate", loc:"E7 · Newham", stn:"Forest Gate", legs:[{line:"elizabeth", ride:10}], term:"liverpool", head:4, ch:0, brg:68, lat:51.5495, lon:0.0243, corr:"elizabeth-east",
+{id:"forestgate", name:"Forest Gate", loc:"E7 · Newham", stn:"Forest Gate", legs:[{line:"elizabeth", ride:10}], term:"liverpool", head:4, ch:0, w:{legs:[{line:"elizabeth", ride:3},{line:"mildmay", ride:18}], term:"calbarn", head:4, ch:1}, brg:68, lat:51.5495, lon:0.0243, corr:"elizabeth-east",
  parking:3, walk:5, green:5, amen:4, rent:1850, boro:"Newham", tenantPark:3, tenantNote:"Controlled zones near the station; the Woodgrange terraces have no off-street space but tenants can hold a permit.", buy:560000,
  vibe:"Woodgrange Road has transformed, the Woodgrange conservation area is full of beautiful terraces, and Wanstead Flats is right there. Twenty-nine minutes door to door.",
  watch:"Controlled parking in the streets nearest the station; the conservation-area houses rarely have off-street space.",
  park:"Wanstead Flats, West Ham Park, Epping Forest"},
 
-{id:"manorpark", name:"Manor Park", loc:"E12 · Newham", stn:"Manor Park", legs:[{line:"elizabeth", ride:12}], term:"liverpool", head:4, ch:0, brg:72, lat:51.5527, lon:0.0463, corr:"elizabeth-east",
+{id:"manorpark", name:"Manor Park", loc:"E12 · Newham", stn:"Manor Park", legs:[{line:"elizabeth", ride:12}], term:"liverpool", head:4, ch:0, w:{legs:[{line:"elizabeth", ride:5},{line:"mildmay", ride:18}], term:"calbarn", head:4, ch:1}, brg:72, lat:51.5527, lon:0.0463, corr:"elizabeth-east",
  parking:3, walk:3, green:4, amen:3, rent:1650, boro:"Newham", tenantPark:3, tenantNote:"Permits available to tenants; competition for kerb space is real.", buy:480000,
  vibe:"Forest Gate's commute for meaningfully less money, with Wanstead Flats equally close.",
  watch:"The high street hasn't caught up with the Elizabeth line yet. Prices are climbing regardless.",
  park:"Wanstead Flats, Manor Park Rec, City of London Cemetery"},
 
-{id:"ilford", name:"Ilford", loc:"IG1 · Redbridge", stn:"Ilford", legs:[{line:"elizabeth", ride:16}], term:"liverpool", head:4, ch:0, brg:74, lat:51.559, lon:0.0693, corr:"elizabeth-east",
+{id:"ilford", name:"Ilford", loc:"IG1 · Redbridge", stn:"Ilford", legs:[{line:"elizabeth", ride:16}], term:"liverpool", head:4, ch:0, w:{legs:[{line:"elizabeth", ride:9},{line:"mildmay", ride:18}], term:"calbarn", head:4, ch:1}, brg:74, lat:51.559, lon:0.0693, corr:"elizabeth-east",
  parking:3, walk:4, green:4, amen:4, rent:1600, boro:"Redbridge", tenantPark:3, tenantNote:"Permits available; the Cranbrook side has more driveways than the centre.", buy:450000,
  vibe:"Thirty-five minutes door to door, Valentines Park on the doorstep, a full-size town centre, and prices that haven't fully absorbed the Elizabeth line yet.",
  watch:"The centre is busy and a bit worn; the nice bits are the streets around Valentines Park and Cranbrook.",
  park:"Valentines Park, Seven Kings Park, Goodmayes Park"},
 
-{id:"goodmayes", name:"Goodmayes", loc:"IG3 · Redbridge", stn:"Goodmayes", legs:[{line:"elizabeth", ride:19}], term:"liverpool", head:5, ch:0, brg:76, lat:51.5653, lon:0.1119, corr:"elizabeth-east",
+{id:"goodmayes", name:"Goodmayes", loc:"IG3 · Redbridge", stn:"Goodmayes", legs:[{line:"elizabeth", ride:19}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:12},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:76, lat:51.5653, lon:0.1119, corr:"elizabeth-east",
  parking:4, walk:3, green:4, amen:3, rent:1550, boro:"Redbridge", tenantPark:5, tenantNote:"Semis with drives; the easiest parking of the Elizabeth line stops this side.", buy:470000,
  vibe:"Semi-detached houses with drives, a decent park, and a 38-minute commute. Unglamorous and very good value.",
  watch:"Suburban in the sleepy sense — you'd be going to Ilford or Wanstead for an evening out.",
  park:"Goodmayes Park, Valentines Park, Seven Kings Park"},
 
-{id:"chadwellheath", name:"Chadwell Heath", loc:"RM6 · Barking & Dagenham", stn:"Chadwell Heath", legs:[{line:"elizabeth", ride:21}], term:"liverpool", head:5, ch:0, brg:77, lat:51.5682, lon:0.1305, corr:"elizabeth-east",
+{id:"chadwellheath", name:"Chadwell Heath", loc:"RM6 · Barking & Dagenham", stn:"Chadwell Heath", legs:[{line:"elizabeth", ride:21}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:14},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:77, lat:51.5682, lon:0.1305, corr:"elizabeth-east",
  parking:5, walk:3, green:3, amen:3, rent:1500, boro:"Barking and Dagenham", tenantPark:5, tenantNote:"Off-street parking is close to guaranteed.", buy:460000,
  vibe:"Off-street parking almost guaranteed, forty minutes door to door, and among the lowest prices anywhere inside the limit.",
  watch:"Least characterful of the Elizabeth line options — the high street is thin.",
  park:"Goodmayes Park, Eastbrookend Country Park, Central Park"},
 
-{id:"romford", name:"Romford", loc:"RM1 · Havering", stn:"Romford", legs:[{line:"elizabeth", ride:24}], term:"liverpool", head:5, ch:0, brg:78, lat:51.5748, lon:0.1834, corr:"elizabeth-east",
+{id:"romford", name:"Romford", loc:"RM1 · Havering", stn:"Romford", legs:[{line:"elizabeth", ride:24}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:17},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:78, lat:51.5748, lon:0.1834, corr:"elizabeth-east",
  parking:4, walk:4, green:4, amen:5, rent:1550, boro:"Havering", tenantPark:4, tenantNote:"Drives are common away from the town centre; the centre itself is controlled.", buy:480000,
  vibe:"A proper town rather than a suburb — market since 1247, The Brewery retail park, Raphael Park, and everything open on a Sunday.",
  watch:"Town centre is loud on a Friday night. Aim for the streets around Raphael Park or Gidea Park instead.",
  park:"Raphael Park, Lodge Farm Park, Bedfords Park"},
 
-{id:"gideapark", name:"Gidea Park", loc:"RM2 · Havering", stn:"Gidea Park", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:5, ch:0, brg:79, lat:51.5807, lon:0.2072, corr:"elizabeth-east",
+{id:"gideapark", name:"Gidea Park", loc:"RM2 · Havering", stn:"Gidea Park", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:19},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:79, lat:51.5807, lon:0.2072, corr:"elizabeth-east",
  parking:5, walk:4, green:4, amen:3, rent:1750, boro:"Havering", tenantPark:5, tenantNote:"Garden suburb plots \u2014 parking is never the problem here.", buy:600000,
  vibe:"The Garden Suburb is genuinely special — Arts and Crafts houses built for a 1911 exhibition, huge plots, mature trees. Raphael Park and a small parade of shops on Balgores Lane.",
  watch:"Lands right on the 45-minute line, so a slow train or a long platform wait tips it over. The good houses are expensive for Havering.",
  park:"Raphael Park, Gidea Park, Bedfords Park"},
 
 /* --- Elizabeth line, south-east ----------------------------------------- */
-{id:"woolwich", name:"Woolwich", loc:"SE18 · Greenwich", stn:"Woolwich", legs:[{line:"elizabeth", ride:22}], term:"liverpool", head:5, ch:0, brg:108, lat:51.4917, lon:0.07, corr:"elizabeth-se",
+{id:"woolwich", name:"Woolwich", loc:"SE18 · Greenwich", stn:"Woolwich", legs:[{line:"elizabeth", ride:22}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:25},{line:"circle", ride:3}], term:"kingscross", head:5, ch:1}, brg:108, lat:51.4917, lon:0.07, corr:"elizabeth-se",
  parking:4, walk:4, green:4, amen:4, rent:1850, boro:"Greenwich", tenantPark:2, tenantNote:"Royal Arsenal spaces are let separately and often already taken; several newer blocks are permit-free.", buy:470000,
  vibe:"Royal Arsenal is a handsome bit of riverside regeneration with actual allocated parking, and the Elizabeth line changed the maths here completely.",
  watch:"Quality varies sharply street to street once you leave the Arsenal and the common.",
  park:"Woolwich Common, Maryon Park, Charlton Park"},
 
-{id:"abbeywood", name:"Abbey Wood", loc:"SE2 · Bexley/Greenwich", stn:"Abbey Wood", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:6, ch:0, brg:106, lat:51.4907, lon:0.12, corr:"elizabeth-se",
+{id:"abbeywood", name:"Abbey Wood", loc:"SE2 · Bexley/Greenwich", stn:"Abbey Wood", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:6, ch:0, w:{legs:[{line:"elizabeth", ride:29},{line:"circle", ride:3}], term:"kingscross", head:6, ch:1}, brg:106, lat:51.4907, lon:0.12, corr:"elizabeth-se",
  parking:5, walk:3, green:5, amen:3, rent:1550, boro:"Bexley", tenantPark:4, tenantNote:"Houses with drives on the Bexley side; the Thamesmead new build is more restricted.", buy:430000,
  vibe:"Lesnes Abbey Woods is a proper ancient woodland with a ruined abbey in it, and the housing comes with drives and garages at prices that look like a misprint.",
  watch:"Amenities are limited and it feels a long way from the rest of London socially.",
  park:"Lesnes Abbey Woods, Bostall Woods, Southmere Park"},
 
 /* --- DLR into Tower Gateway --------------------------------------------- */
-{id:"greenwich", name:"Greenwich", loc:"SE10 · Greenwich", stn:"Greenwich", legs:[{line:"dlr", ride:22}], term:"towergw", head:6, ch:0, brg:122, lat:51.4781, lon:-0.0149, corr:"dlr-se",
+{id:"greenwich", name:"Greenwich", loc:"SE10 · Greenwich", stn:"Greenwich", legs:[{line:"dlr", ride:22}], term:"towergw", head:6, ch:0, w:{legs:[{line:"dlr", ride:20},{line:"northern", ride:8}], term:"kingscross", head:6, ch:1}, brg:122, lat:51.4781, lon:-0.0149, corr:"dlr-se",
  parking:2, walk:5, green:5, amen:5, rent:2150, boro:"Greenwich", tenantPark:2, tenantNote:"Tourist pressure, controlled zones and Georgian terraces with no off-street space.", buy:700000,
  vibe:"Greenwich Park is world class, the market and the town centre are lovely to walk around, and the DLR drops you four minutes from the office door.",
  watch:"Parking is the catch — controlled zones, tourist pressure, and Georgian terraces with no off-street space.",
  park:"Greenwich Park, Blackheath, Greenwich Peninsula Ecology Park"},
 
-{id:"lewisham", name:"Lewisham", loc:"SE13 · Lewisham", stn:"Lewisham", legs:[{line:"dlr", ride:26}], term:"towergw", head:6, ch:0, brg:135, lat:51.4657, lon:-0.0142, corr:"dlr-se",
+{id:"lewisham", name:"Lewisham", loc:"SE13 · Lewisham", stn:"Lewisham", legs:[{line:"dlr", ride:26}], term:"towergw", head:6, ch:0, w:{legs:[{line:"dlr", ride:24},{line:"northern", ride:8}], term:"kingscross", head:6, ch:1}, brg:135, lat:51.4657, lon:-0.0142, corr:"dlr-se",
  parking:3, walk:4, green:4, amen:4, rent:1800, boro:"Lewisham", tenantPark:3, tenantNote:"Permits available to tenants; the side streets are better than the centre.", buy:520000,
  vibe:"Better value than Greenwich next door, with Manor House Gardens and Ladywell Fields, and both the DLR and fast trains to town.",
  watch:"The centre is dominated by the shopping centre and the roundabout; the charm is in the side streets.",
  park:"Manor House Gardens, Ladywell Fields, Hilly Fields"},
 
-{id:"blackheath", name:"Blackheath", loc:"SE3 · Greenwich/Lewisham", stn:"Blackheath", legs:[{line:"southeast", ride:17}], term:"cannon", head:10, ch:0, brg:125, lat:51.4657, lon:0.009, corr:"southeastern",
+{id:"blackheath", name:"Blackheath", loc:"SE3 · Greenwich/Lewisham", stn:"Blackheath", legs:[{line:"southeast", ride:17}], term:"cannon", head:10, ch:0, w:{legs:[{line:"southeast", ride:15},{line:"northern", ride:12}], term:"kingscross", head:10, ch:1}, brg:125, lat:51.4657, lon:0.009, corr:"southeastern",
  parking:4, walk:5, green:5, amen:4, rent:2200, boro:"Lewisham", tenantPark:4, tenantNote:"One of the few walkable areas where rentals still come with off-street space.", buy:800000,
  vibe:"The village is beautiful, the Heath is enormous and Greenwich Park is over the hill. One of the few places on this list with both walkability and workable parking.",
  watch:"Expensive, and the fourteen-minute walk from Cannon Street eats most of the advantage of a fast train. Check the numbers carefully.",
  park:"Blackheath, Greenwich Park, Sutcliffe Park"},
 
 /* --- Windrush line via Whitechapel -------------------------------------- */
-{id:"canadawater", name:"Canada Water", loc:"SE16 · Southwark", stn:"Canada Water", legs:[{line:"windrush", ride:6},{line:"district", ride:2}], term:"aldgateE", head:5, ch:1, brg:165, lat:51.498, lon:-0.0498, corr:"windrush",
+{id:"canadawater", name:"Canada Water", loc:"SE16 · Southwark", stn:"Canada Water", legs:[{line:"windrush", ride:6},{line:"district", ride:2}], term:"aldgateE", head:5, ch:1, w:{legs:[{line:"windrush", ride:20},{line:"mildmay", ride:3}], term:"calbarn", head:5, ch:1}, brg:165, lat:51.498, lon:-0.0498, corr:"windrush",
  parking:3, walk:4, green:4, amen:4, rent:2300, boro:"Southwark", tenantPark:1, tenantNote:"Southwark's car-free planning conditions cover most of the new development here. Assume no permit.", buy:600000,
  vibe:"Thirty minutes door to door, a huge new town centre being built, docks and woodland walks, and new blocks that actually come with parking spaces.",
  watch:"A building site for the next few years, and you pay new-build prices.",
  park:"Southwark Park, Russia Dock Woodland, Stave Hill"},
 
-{id:"brockley", name:"Brockley", loc:"SE4 · Lewisham", stn:"Brockley", legs:[{line:"windrush", ride:16},{line:"district", ride:2}], term:"aldgateE", head:8, ch:1, brg:178, lat:51.4646, lon:-0.0374, corr:"windrush",
+{id:"brockley", name:"Brockley", loc:"SE4 · Lewisham", stn:"Brockley", legs:[{line:"windrush", ride:16},{line:"district", ride:2}], term:"aldgateE", head:8, ch:1, w:{legs:[{line:"windrush", ride:30},{line:"mildmay", ride:3}], term:"calbarn", head:8, ch:1}, brg:178, lat:51.4646, lon:-0.0374, corr:"windrush",
  parking:3, walk:4, green:4, amen:4, rent:1900, boro:"Lewisham", tenantPark:3, tenantNote:"Conservation-area terraces, permits available but on-street only.", buy:620000,
  vibe:"Hilly Fields is a genuinely special park with a view over London, and Brockley Road has the delis and the good pub without being precious about it.",
  watch:"One change at Whitechapel, and the conservation-area terraces mostly park on the street.",
  park:"Hilly Fields, Ladywell Fields, Telegraph Hill"},
 
-{id:"foresthill", name:"Forest Hill", loc:"SE23 · Lewisham", stn:"Forest Hill", legs:[{line:"windrush", ride:20},{line:"district", ride:2}], term:"aldgateE", head:8, ch:1, brg:190, lat:51.4392, lon:-0.0532, corr:"windrush",
+{id:"foresthill", name:"Forest Hill", loc:"SE23 · Lewisham", stn:"Forest Hill", legs:[{line:"windrush", ride:20},{line:"district", ride:2}], term:"aldgateE", head:8, ch:1, w:{legs:[{line:"windrush", ride:34},{line:"mildmay", ride:3}], term:"calbarn", head:8, ch:1}, brg:190, lat:51.4392, lon:-0.0532, corr:"windrush",
  parking:4, walk:5, green:5, amen:4, rent:1900, boro:"Lewisham", tenantPark:4, tenantNote:"Wider streets and front drives on many of the houses.", buy:640000,
  vibe:"The Horniman Museum gardens are free, extraordinary, and effectively your local park. The high street has real independents and the streets are wide with front drives.",
  watch:"Sits right on the limit because of the change at Whitechapel — and it's the far side of London from the Essex family orbit.",
  park:"Horniman Gardens, Sydenham Hill Wood, Mayow Park"},
 
 /* --- Metropolitan line: no change at all -------------------------------- */
-{id:"wembleypark", name:"Wembley Park", loc:"HA9 · Brent", stn:"Wembley Park", legs:[{line:"met", ride:28}], term:"aldgate", head:6, ch:0, brg:300, lat:51.5635, lon:-0.2795, corr:"met-nw",
+{id:"wembleypark", name:"Wembley Park", loc:"HA9 · Brent", stn:"Wembley Park", legs:[{line:"met", ride:28}], term:"aldgate", head:6, ch:0, w:{legs:[{line:"met", ride:20}], term:"kingscross", head:6, ch:0}, brg:300, lat:51.5635, lon:-0.2795, corr:"met-nw",
  parking:4, walk:4, green:3, amen:4, rent:1950, boro:"Brent", tenantPark:3, tenantNote:"The newer blocks have secure parking but charge for it separately; stadium days are miserable.", buy:520000,
  vibe:"The Metropolitan line runs into Aldgate itself, so you step off the train three minutes from the door with no changes at all. Wembley Park has been rebuilt with shops, a park and secure parking.",
  watch:"Event days at the stadium make the area completely impassable roughly thirty times a year.",
  park:"King Edward VII Park, Barham Park, Fryent Country Park"},
 
-{id:"prestonroad", name:"Preston Road", loc:"HA9 · Brent", stn:"Preston Road", legs:[{line:"met", ride:30}], term:"aldgate", head:8, ch:0, brg:302, lat:51.5723, lon:-0.2954, corr:"met-nw",
+{id:"prestonroad", name:"Preston Road", loc:"HA9 · Brent", stn:"Preston Road", legs:[{line:"met", ride:30}], term:"aldgate", head:8, ch:0, w:{legs:[{line:"met", ride:22}], term:"kingscross", head:8, ch:0}, brg:302, lat:51.5723, lon:-0.2954, corr:"met-nw",
  parking:5, walk:3, green:4, amen:3, rent:1800, boro:"Brent", tenantPark:5, tenantNote:"Inter-war semis with garages.", buy:560000,
  vibe:"Quiet inter-war semis with garages, a direct no-change run to Aldgate, and Fryent Country Park's hills five minutes away.",
  watch:"Small parade of shops only, and some Metropolitan services terminate at Baker Street rather than running through — check the boards.",
  park:"Preston Park, Fryent Country Park, Barham Park"},
 
-{id:"harrowonthehill", name:"Harrow-on-the-Hill", loc:"HA1 · Harrow", stn:"Harrow-on-the-Hill", legs:[{line:"met", ride:32}], term:"aldgate", head:6, ch:0, brg:295, lat:51.5793, lon:-0.337, corr:"met-nw",
+{id:"harrowonthehill", name:"Harrow-on-the-Hill", loc:"HA1 · Harrow", stn:"Harrow-on-the-Hill", legs:[{line:"met", ride:32}], term:"aldgate", head:6, ch:0, w:{legs:[{line:"met", ride:24}], term:"kingscross", head:6, ch:0}, brg:295, lat:51.5793, lon:-0.337, corr:"met-nw",
  parking:5, walk:4, green:4, amen:4, rent:1800, boro:"Harrow", tenantPark:5, tenantNote:"Drives standard away from the town centre.", buy:600000,
  vibe:"The Hill itself is a beautiful old village above a full-size town centre, with fast Metropolitan trains running straight into Aldgate.",
  watch:"Only the fast trains make the time work — the all-stations service adds ten minutes. Just over the limit as scored.",
  park:"Harrow Recreation Ground, Northwick Park, Harrow Hill"},
 
-{id:"finchleyroad", name:"Finchley Road", loc:"NW3 · Camden", stn:"Finchley Road", legs:[{line:"met", ride:18}], term:"aldgate", head:4, ch:0, brg:310, lat:51.5472, lon:-0.1803, corr:"met-nw",
+{id:"finchleyroad", name:"Finchley Road", loc:"NW3 · Camden", stn:"Finchley Road", legs:[{line:"met", ride:18}], term:"aldgate", head:4, ch:0, w:{legs:[{line:"met", ride:10}], term:"kingscross", head:4, ch:0}, brg:310, lat:51.5472, lon:-0.1803, corr:"met-nw",
  parking:2, walk:5, green:5, amen:5, rent:2700, boro:"Camden", tenantPark:2, tenantNote:"Camden permits, dense mansion blocks, very little off-street space.", buy:900000,
  vibe:"Thirty-one minutes with no changes, Hampstead Heath a walk away, and both the Metropolitan and Jubilee lines if one fails.",
  watch:"The most expensive area on this list, and Camden parking permits with very little off-street space.",
  park:"Hampstead Heath, Regent's Park, Golders Hill Park"},
 
 /* --- Elizabeth line, west ----------------------------------------------- */
-{id:"ealingbroadway", name:"Ealing Broadway", loc:"W5 · Ealing", stn:"Ealing Broadway", legs:[{line:"elizabeth", ride:21}], term:"liverpool", head:5, ch:0, brg:275, lat:51.5152, lon:-0.3017, corr:"elizabeth-west",
+{id:"ealingbroadway", name:"Ealing Broadway", loc:"W5 · Ealing", stn:"Ealing Broadway", legs:[{line:"elizabeth", ride:21}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:13},{line:"northern", ride:5}], term:"kingscross", head:5, ch:1}, brg:275, lat:51.5152, lon:-0.3017, corr:"elizabeth-west",
  parking:3, walk:5, green:5, amen:5, rent:2200, boro:"Ealing", tenantPark:3, tenantNote:"Controlled zones in the centre; the Pitshanger and Northfields streets have drives.", buy:750000,
  vibe:"Queen of the Suburbs, and it earns it: Walpole Park, Haven Green, a real high street, and 41 minutes door to door on the Elizabeth line.",
  watch:"Expensive, and it puts you on the opposite side of London from east-London life.",
  park:"Walpole Park, Lammas Park, Pitshanger Park"},
 
-{id:"actonmainline", name:"Acton Main Line", loc:"W3 · Ealing", stn:"Acton Main Line", legs:[{line:"elizabeth", ride:18}], term:"liverpool", head:5, ch:0, brg:278, lat:51.517, lon:-0.2678, corr:"elizabeth-west",
+{id:"actonmainline", name:"Acton Main Line", loc:"W3 · Ealing", stn:"Acton Main Line", legs:[{line:"elizabeth", ride:18}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:10},{line:"northern", ride:5}], term:"kingscross", head:5, ch:1}, brg:278, lat:51.517, lon:-0.2678, corr:"elizabeth-west",
  parking:3, walk:4, green:4, amen:4, rent:2000, boro:"Ealing", tenantPark:3, tenantNote:"Mixed \u2014 some streets have drives, the centre is controlled.", buy:620000,
  vibe:"Ealing's commute for less money, with Acton Park and a high street that has improved a lot since the Elizabeth line opened.",
  watch:"Acton is a collection of very different neighbourhoods — walk the specific streets before deciding.",
  park:"Acton Park, Springfield Gardens, Gunnersbury Park"},
 
-{id:"hanwell", name:"Hanwell", loc:"W7 · Ealing", stn:"Hanwell", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:6, ch:0, brg:272, lat:51.5119, lon:-0.3387, corr:"elizabeth-west",
+{id:"hanwell", name:"Hanwell", loc:"W7 · Ealing", stn:"Hanwell", legs:[{line:"elizabeth", ride:26}], term:"liverpool", head:6, ch:0, w:{legs:[{line:"elizabeth", ride:18},{line:"northern", ride:5}], term:"kingscross", head:6, ch:1}, brg:272, lat:51.5119, lon:-0.3387, corr:"elizabeth-west",
  parking:4, walk:4, green:5, amen:3, rent:1850, boro:"Ealing", tenantPark:4, tenantNote:"Most houses have somewhere to put a car.", buy:620000,
  vibe:"A village feel with the Brent River Park, Elthorne Park and the Wharncliffe Viaduct, plus houses that mostly have somewhere to put a car.",
  watch:"Comes out just over the limit, and Ealing Broadway is where you go for anything substantial.",
  park:"Brent River Park, Elthorne Park, Bunny Park"},
 
 /* --- Mainline fast services --------------------------------------------- */
-{id:"shenfield", name:"Shenfield", loc:"CM15 · Brentwood", stn:"Shenfield", legs:[{line:"greatanglia", ride:22}], term:"liverpool", head:10, ch:0, brg:72, lat:51.6310, lon:0.3295, corr:"greateranglia",
+{id:"shenfield", name:"Shenfield", loc:"CM15 · Brentwood", stn:"Shenfield", legs:[{line:"greatanglia", ride:22}], term:"liverpool", head:10, ch:0, w:{legs:[{line:"greatanglia", ride:17},{line:"mildmay", ride:18}], term:"calbarn", head:10, ch:1}, brg:72, lat:51.6310, lon:0.3295, corr:"greateranglia",
  parking:5, walk:4, green:4, amen:4, rent:1800, boro:"Brentwood", tenantPark:5, tenantNote:"Large plots with drives and garages.", buy:675000,
  vibe:"The fast-train answer. Greater Anglia runs Shenfield into Liverpool Street in 22 minutes — the same as Upminster, from twice the distance. Large houses on large plots, driveways as standard, and some of the best state schools in the region.",
  watch:"Only the fast trains make this work. The all-stations Elizabeth line service from the same platform takes 36 minutes, which puts you well over. You would be timing your morning around specific departures.",
  park:"Shenfield Common, Hutton Country Park, Weald Country Park"},
 
-{id:"brentwood", name:"Brentwood", loc:"CM14 · Brentwood", stn:"Brentwood", legs:[{line:"elizabeth", ride:32}], term:"liverpool", head:5, ch:0, brg:73, lat:51.6136, lon:0.2996, corr:"elizabeth-east",
+{id:"brentwood", name:"Brentwood", loc:"CM14 · Brentwood", stn:"Brentwood", legs:[{line:"elizabeth", ride:32}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:25},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:73, lat:51.6136, lon:0.2996, corr:"elizabeth-east",
  parking:5, walk:5, green:5, amen:4, rent:1650, boro:"Brentwood", tenantPark:5, tenantNote:"Outside London entirely; drives are the norm.", buy:600000,
  vibe:"A genuinely good high street, Weald Country Park on the doorstep, and space for the money. On walkability and green space it scores as well as anywhere on this list.",
  watch:"Over the limit on the Elizabeth line, which is all-stations from here. Shenfield is one stop further out and eight minutes faster — if you like Brentwood, look at Shenfield.",
  park:"Weald Country Park, Shenfield Common, Thorndon Country Park"},
 
-{id:"haroldwood", name:"Harold Wood", loc:"RM3 · Havering", stn:"Harold Wood", legs:[{line:"elizabeth", ride:28}], term:"liverpool", head:5, ch:0, brg:76, lat:51.5924, lon:0.2334, corr:"elizabeth-east",
+{id:"haroldwood", name:"Harold Wood", loc:"RM3 · Havering", stn:"Harold Wood", legs:[{line:"elizabeth", ride:28}], term:"liverpool", head:5, ch:0, w:{legs:[{line:"elizabeth", ride:21},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:76, lat:51.5924, lon:0.2334, corr:"elizabeth-east",
  parking:5, walk:3, green:4, amen:3, rent:1600, boro:"Havering", tenantPark:5, tenantNote:"Drives standard, including in the new development by the station.", buy:520000,
  vibe:"Gidea Park's cheaper neighbour, with the same guaranteed off-street parking and a big new-build development by the station.",
  watch:"Three minutes past the limit and thin on high street. It is a commute-and-park choice.",
  park:"Harold Wood Park, Pages Wood, Bedfords Park"},
 
-{id:"ebbsfleet", name:"Ebbsfleet International", loc:"DA10 · Kent", stn:"Ebbsfleet International", legs:[{line:"hs1", ride:19},{line:"circle", ride:12}], term:"aldgate", head:8, ch:1, brg:110, lat:51.4429, lon:0.3208, corr:"highspeed",
+{id:"ebbsfleet", name:"Ebbsfleet International", loc:"DA10 · Kent", stn:"Ebbsfleet International", legs:[{line:"hs1", ride:19},{line:"circle", ride:12}], term:"aldgate", head:8, ch:1, w:{legs:[{line:"hs1", ride:19}], term:"kingscross", head:8, ch:0}, brg:110, lat:51.4429, lon:0.3208, corr:"highspeed",
  parking:5, walk:2, green:3, amen:2, rent:1600, boro:"Dartford", tenantPark:5, tenantNote:"New houses built with two spaces each.", buy:400000,
  vibe:"High Speed 1 covers Ebbsfleet to St Pancras in 19 minutes, which is the fastest rail leg on this entire list. New houses, huge parking, Kent prices.",
  watch:"The speed is wasted at the wrong end. St Pancras is the far side of central London, so you add a long interchange plus twelve minutes on the Circle line — and the walk between the high-speed platforms and the Underground is itself longer than the five minutes modelled here. Realistically 55 minutes, not 51.",
  park:"Ebbsfleet Green, Bluewater parkland, Darent Valley"},
 
 /* --- Bexley and the Southeastern corridor -------------------------------- */
-{id:"bexleyheath", name:"Bexleyheath", loc:"DA6 · Bexley", stn:"Bexleyheath", legs:[{line:"southeast", ride:35}], term:"cannon", head:8, ch:0, brg:118, lat:51.4592, lon:0.1379, corr:"southeastern-bexleyheath",
+{id:"bexleyheath", name:"Bexleyheath", loc:"DA6 · Bexley", stn:"Bexleyheath", legs:[{line:"southeast", ride:35}], term:"cannon", head:8, ch:0, w:{legs:[{line:"southeast", ride:30},{line:"northern", ride:12}], term:"kingscross", head:8, ch:1}, brg:118, lat:51.4592, lon:0.1379, corr:"southeastern-bexleyheath",
  parking:5, walk:4, green:4, amen:4, rent:1500, boro:"Bexley", tenantPark:5, tenantNote:"Semis with drives; no permit regime to worry about.", buy:475000,
  vibe:"Everything you would want on paper: three-bed semis with drives well under £500k, a real shopping centre, Danson Park, and a direct train.",
  watch:"The direct train goes to Cannon Street, and Cannon Street is a fourteen-minute walk from this office — the longest final walk of any terminus here. That single fact costs about ten minutes versus an equivalent Essex town and puts Bexleyheath fifteen minutes over. There is no faster route: changing at Lewisham or London Bridge is slower still.",
  park:"Danson Park, Bexley Woods, Foots Cray Meadows"},
 
-{id:"welling", name:"Welling", loc:"DA16 · Bexley", stn:"Welling", legs:[{line:"southeast", ride:31}], term:"cannon", head:8, ch:0, brg:115, lat:51.4643, lon:0.1050, corr:"southeastern-bexleyheath",
+{id:"welling", name:"Welling", loc:"DA16 · Bexley", stn:"Welling", legs:[{line:"southeast", ride:31}], term:"cannon", head:8, ch:0, w:{legs:[{line:"southeast", ride:26},{line:"northern", ride:12}], term:"kingscross", head:8, ch:1}, brg:115, lat:51.4643, lon:0.1050, corr:"southeastern-bexleyheath",
  parking:5, walk:4, green:4, amen:3, rent:1450, boro:"Bexley", tenantPark:5, tenantNote:"Same suburban stock, same easy parking.", buy:450000,
  vibe:"Bexleyheath's neighbour and slightly closer in, with the same suburban housing stock and the same low prices.",
  watch:"Same structural problem — it is a Cannon Street line, so the fourteen-minute walk at the end kills it. Twelve minutes over.",
  park:"Danson Park, Shooters Hill, Oxleas Wood"},
 
-{id:"erith", name:"Erith", loc:"DA8 · Bexley", stn:"Erith", legs:[{line:"southeast", ride:5},{line:"elizabeth", ride:26}], term:"liverpool", head:8, ch:1, brg:110, lat:51.4813, lon:0.1740, corr:"southeastern-northkent",
+{id:"erith", name:"Erith", loc:"DA8 · Bexley", stn:"Erith", legs:[{line:"southeast", ride:5},{line:"elizabeth", ride:26}], term:"liverpool", head:8, ch:1, w:{legs:[{line:"southeast", ride:5},{line:"elizabeth", ride:29},{line:"circle", ride:3}], term:"kingscross", head:8, ch:2}, brg:110, lat:51.4813, lon:0.1740, corr:"southeastern-northkent",
  parking:5, walk:3, green:4, amen:3, rent:1350, boro:"Bexley", tenantPark:5, tenantNote:"Drives standard and rents the lowest on this list.", buy:370000,
  vibe:"The cheapest housing anywhere in this exercise, on the riverside, with Abbey Wood and the Elizabeth line five minutes up the track.",
  watch:"Those five minutes cost you a change and a wait, which is why it lands twelve minutes over despite being close to a station that works. If you love this area, live in Abbey Wood instead and accept the higher price.",
  park:"Erith Riverside Gardens, Franks Park, Lesnes Abbey Woods"},
 
-{id:"belvedere", name:"Belvedere", loc:"DA17 · Bexley", stn:"Belvedere", legs:[{line:"southeast", ride:3},{line:"elizabeth", ride:26}], term:"liverpool", head:8, ch:1, brg:107, lat:51.4909, lon:0.1470, corr:"southeastern-northkent",
+{id:"belvedere", name:"Belvedere", loc:"DA17 · Bexley", stn:"Belvedere", legs:[{line:"southeast", ride:3},{line:"elizabeth", ride:26}], term:"liverpool", head:8, ch:1, w:{legs:[{line:"southeast", ride:3},{line:"elizabeth", ride:29},{line:"circle", ride:3}], term:"kingscross", head:8, ch:2}, brg:107, lat:51.4909, lon:0.1470, corr:"southeastern-northkent",
  parking:5, walk:3, green:4, amen:2, rent:1400, boro:"Bexley", tenantPark:5, tenantNote:"Houses with drives throughout.", buy:390000,
  vibe:"One stop from Abbey Wood, and cheaper for it. Lesnes Abbey Woods is walkable and the houses have drives.",
  watch:"Ten minutes over, entirely because of the change at Abbey Wood. Worth checking whether you could walk or cycle to Abbey Wood directly — that would change the answer completely.",
  park:"Lesnes Abbey Woods, Bostall Woods, Belvedere Splash Park"},
 
-{id:"plumstead", name:"Plumstead", loc:"SE18 · Greenwich", stn:"Plumstead", legs:[{line:"southeast", ride:26}], term:"cannon", head:6, ch:0, brg:106, lat:51.4894, lon:0.0840, corr:"southeastern-northkent",
+{id:"plumstead", name:"Plumstead", loc:"SE18 · Greenwich", stn:"Plumstead", legs:[{line:"southeast", ride:26}], term:"cannon", head:6, ch:0, w:{legs:[{line:"southeast", ride:21},{line:"northern", ride:12}], term:"kingscross", head:6, ch:1}, brg:106, lat:51.4894, lon:0.0840, corr:"southeastern-northkent",
  parking:4, walk:3, green:5, amen:3, rent:1600, boro:"Greenwich", tenantPark:3, tenantNote:"Older stock with permits available, and hillier streets with some off-street space.", buy:420000,
  vibe:"Cheap, hilly, and backing onto Plumstead Common and the Shooters Hill woodlands. Well-placed between Woolwich and Abbey Wood.",
  watch:"Seven minutes over on its own station's Cannon Street service — but Woolwich and the Elizabeth line are about a fifteen-minute walk away, which would bring it inside the limit. This is the one area on the list where the walk-to-station number is worth overriding by hand.",
  park:"Plumstead Common, Winn's Common, Oxleas Wood"},
 
 /* --- The Royal Docks: DLR straight to Tower Gateway ---------------------- */
-{id:"customhouse", name:"Custom House", loc:"E16 · Newham", stn:"Custom House", legs:[{line:"elizabeth", ride:15}], term:"liverpool", head:4, ch:0, brg:93, lat:51.5095, lon:0.0276, corr:"elizabeth-se",
+{id:"customhouse", name:"Custom House", loc:"E16 · Newham", stn:"Custom House", legs:[{line:"elizabeth", ride:15}], term:"liverpool", head:4, ch:0, w:{legs:[{line:"elizabeth", ride:18},{line:"circle", ride:3}], term:"kingscross", head:4, ch:1}, brg:93, lat:51.5095, lon:0.0276, corr:"elizabeth-se",
  parking:3, walk:3, green:3, amen:3, rent:1950, boro:"Newham", tenantPark:1, tenantNote:"Royal Docks regeneration is car-free by policy. A rental here will not come with a permit.", buy:480000,
  vibe:"Thirty-four minutes door to door for well under £500k, in the middle of the Royal Docks regeneration. On pure commute-per-pound it is one of the best entries here.",
  watch:"Still a building site in places, and the neighbourhood around ExCeL is thin on the ordinary things — a butcher, a decent pub, a park you would walk to.",
  park:"Thames Barrier Park, Royal Victoria Gardens, Lyle Park"},
 
-{id:"royalvictoria", name:"Royal Victoria", loc:"E16 · Newham", stn:"Royal Victoria", legs:[{line:"dlr", ride:20}], term:"towergw", head:6, ch:0, brg:95, lat:51.5091, lon:0.0181, corr:"dlr-beckton",
+{id:"royalvictoria", name:"Royal Victoria", loc:"E16 · Newham", stn:"Royal Victoria", legs:[{line:"dlr", ride:20}], term:"towergw", head:6, ch:0, w:{legs:[{line:"dlr", ride:20},{line:"northern", ride:8}], term:"kingscross", head:6, ch:1}, brg:95, lat:51.5091, lon:0.0181, corr:"dlr-beckton",
  parking:3, walk:3, green:3, amen:3, rent:1900, boro:"Newham", tenantPark:1, tenantNote:"Same Royal Docks car-free policy \u2014 parking is a paid space in a block if it exists at all.", buy:460000,
  vibe:"Dockside flats with water on two sides and a DLR that puts you four minutes from the office door.",
  watch:"Almost entirely flats, and windy in a way the brochures never mention.",
  park:"Thames Barrier Park, Royal Victoria Gardens, Beckton District Park"},
 
-{id:"gallionsreach", name:"Gallions Reach", loc:"E6 · Newham", stn:"Gallions Reach", legs:[{line:"dlr", ride:27}], term:"towergw", head:10, ch:0, brg:93, lat:51.5096, lon:0.0716, corr:"dlr-beckton",
+{id:"gallionsreach", name:"Gallions Reach", loc:"E6 · Newham", stn:"Gallions Reach", legs:[{line:"dlr", ride:27}], term:"towergw", head:10, ch:0, w:{legs:[{line:"dlr", ride:28},{line:"northern", ride:8}], term:"kingscross", head:10, ch:1}, brg:93, lat:51.5096, lon:0.0716, corr:"dlr-beckton",
  parking:5, walk:3, green:3, amen:2, rent:1600, boro:"Newham", tenantPark:4, tenantNote:"Nineties estate housing with drives, unlike the Royal Docks blocks nearer town.", buy:420000,
  vibe:"Forty-four minutes, off-street parking, and a three-bed house for around £420k — the cheapest thing on this list that actually clears the limit.",
  watch:"Amenities are genuinely sparse and the DLR runs only every ten minutes. You would be driving for most things.",
  park:"Beckton District Park, Beckton Park, East Ham Nature Reserve"},
 
-{id:"beckton", name:"Beckton", loc:"E6 · Newham", stn:"Beckton", legs:[{line:"dlr", ride:29}], term:"towergw", head:10, ch:0, brg:91, lat:51.5148, lon:0.0613, corr:"dlr-beckton",
+{id:"beckton", name:"Beckton", loc:"E6 · Newham", stn:"Beckton", legs:[{line:"dlr", ride:29}], term:"towergw", head:10, ch:0, w:{legs:[{line:"dlr", ride:30},{line:"northern", ride:8}], term:"kingscross", head:10, ch:1}, brg:91, lat:51.5148, lon:0.0613, corr:"dlr-beckton",
  parking:5, walk:3, green:3, amen:3, rent:1650, boro:"Newham", tenantPark:5, tenantNote:"Family houses with drives and garages \u2014 the exception in this borough.", buy:430000,
  vibe:"Family houses with drives and garages at Essex prices but inside a London borough, with a retail park for the weekly shop.",
  watch:"One minute over as scored, and the DLR terminus means a seat but also a ten-minute headway. Car-dependent for anything beyond the retail park.",
@@ -732,49 +765,49 @@ const AREAS = [
    Added after checking what people are recommending rather than only what the
    rail geography suggested. Most of these fail the parking test — that is the
    trade, and it is stated plainly on each card. */
-{id:"bethnalgreen", name:"Bethnal Green", loc:"E2 · Tower Hamlets", stn:"Bethnal Green", legs:[{line:"central", ride:4}], term:"liverpool", head:3, ch:0, brg:52, lat:51.5270, lon:-0.0549, corr:"central-epping",
+{id:"bethnalgreen", name:"Bethnal Green", loc:"E2 · Tower Hamlets", stn:"Bethnal Green", legs:[{line:"central", ride:4}], term:"liverpool", head:3, ch:0, w:{legs:[{line:"central", ride:4},{line:"mildmay", ride:18}], term:"calbarn", head:3, ch:1}, brg:52, lat:51.5270, lon:-0.0549, corr:"central-epping",
  parking:1, walk:5, green:4, amen:5, rent:2350, boro:"Tower Hamlets", tenantPark:1, tenantNote:"Tower Hamlets car-free register plus dense estate and terrace housing. Effectively no parking.", buy:895000,
  vibe:"Twenty-three minutes door to door and one of the shortest commutes on this list. Columbia Road, Broadway Market and Victoria Park are all walkable, and the Central line gets you home in four minutes.",
  watch:"Parking is about as hard as London gets — Tower Hamlets permits, dense Victorian and estate housing, almost nothing off-street.",
  park:"Victoria Park, Weavers Fields, Haggerston Park"},
 
-{id:"londonfields", name:"London Fields", loc:"E8 · Hackney", stn:"London Fields", legs:[{line:"weaver", ride:8}], term:"liverpool", head:8, ch:0, brg:20, lat:51.5411, lon:-0.0574, corr:"weaver-enfield",
+{id:"londonfields", name:"London Fields", loc:"E8 · Hackney", stn:"London Fields", legs:[{line:"weaver", ride:8}], term:"liverpool", head:8, ch:0, w:{legs:[{line:"weaver", ride:2},{line:"mildmay", ride:9}], term:"calbarn", head:8, ch:1}, brg:20, lat:51.5411, lon:-0.0574, corr:"weaver-enfield",
  parking:1, walk:5, green:5, amen:5, rent:2600, boro:"Hackney", tenantPark:1, tenantNote:"Hackney car-free development rules and the tightest kerb competition in London.", buy:1150000,
  vibe:"The one everybody names. Broadway Market, the lido, the park, and a 29-minute commute. If you were optimising purely for how good the weekends are, this wins.",
  watch:"Hackney parking and Hackney prices — a terraced house here has a median around £960k. Both of your constraints point away from it.",
  park:"London Fields, Victoria Park, Hackney Downs"},
 
-{id:"dalston", name:"Dalston", loc:"E8 · Hackney", stn:"Dalston Junction", legs:[{line:"windrush", ride:10},{line:"district", ride:2}], term:"aldgateE", head:6, ch:1, brg:358, lat:51.5460, lon:-0.0750, corr:"windrush-north",
+{id:"dalston", name:"Dalston", loc:"E8 · Hackney", stn:"Dalston Junction", legs:[{line:"windrush", ride:10},{line:"district", ride:2}], term:"aldgateE", head:6, ch:1, w:{legs:[{line:"windrush", ride:4},{line:"mildmay", ride:3}], term:"calbarn", head:6, ch:1}, brg:358, lat:51.5460, lon:-0.0750, corr:"windrush-north",
  parking:1, walk:5, green:4, amen:5, rent:2550, boro:"Hackney", tenantPark:1, tenantNote:"Car-free conditions across most of the newer stock; permits otherwise near-impossible.", buy:1150000,
  vibe:"Kingsland Road's restaurants and bars, Ridley Road market, and two Overground lines. Perennially near the top of anyone's list in their late twenties.",
  watch:"Same problem as London Fields: brutal for parking, and you pay a premium for the nightlife whether or not you use it.",
  park:"Dalston Eastern Curve Garden, London Fields, Clissold Park"},
 
-{id:"clapton", name:"Clapton", loc:"E5 · Hackney", stn:"Clapton", legs:[{line:"weaver", ride:10}], term:"liverpool", head:8, ch:0, brg:12, lat:51.5613, lon:-0.0556, corr:"weaver-chingford",
+{id:"clapton", name:"Clapton", loc:"E5 · Hackney", stn:"Clapton", legs:[{line:"weaver", ride:10}], term:"liverpool", head:8, ch:0, w:{legs:[{line:"weaver", ride:3},{line:"mildmay", ride:9}], term:"calbarn", head:8, ch:1}, brg:12, lat:51.5613, lon:-0.0556, corr:"weaver-chingford",
  parking:2, walk:5, green:5, amen:4, rent:2400, boro:"Hackney", tenantPark:2, tenantNote:"Slightly easier than central Hackney but still a permit lottery.", buy:1228750,
  vibe:"Hackney's quieter, greener end — the Lea marshes and Springfield Park on one side, Chatsworth Road market on the other, and 31 minutes to the office.",
  watch:"Cheaper than Stoke Newington in feel but not in price, and parking is still Hackney parking.",
  park:"Springfield Park, Hackney Marshes, Millfields Park"},
 
-{id:"hackneywick", name:"Hackney Wick", loc:"E9 · Hackney", stn:"Hackney Wick", legs:[{line:"mildmay", ride:4},{line:"elizabeth", ride:7}], term:"liverpool", head:8, ch:1, brg:38, lat:51.5434, lon:-0.0225, corr:"mildmay",
+{id:"hackneywick", name:"Hackney Wick", loc:"E9 · Hackney", stn:"Hackney Wick", legs:[{line:"mildmay", ride:4},{line:"elizabeth", ride:7}], term:"liverpool", head:8, ch:1, w:{legs:[{line:"mildmay", ride:14}], term:"calbarn", head:8, ch:0}, brg:38, lat:51.5434, lon:-0.0225, corr:"mildmay",
  parking:2, walk:4, green:5, amen:4, rent:2300, boro:"Hackney", tenantPark:1, tenantNote:"Almost entirely new or converted stock built car-free.", buy:995000,
  vibe:"Warehouse conversions, canalside breweries and the Olympic Park over the bridge. The most distinctive place on this list by some distance.",
  watch:"Needs a change at Stratford, parking is poor, and it is still more studios-and-scaffolding than settled neighbourhood.",
  park:"Queen Elizabeth Olympic Park, Victoria Park, Hackney Marshes"},
 
-{id:"leyton", name:"Leyton", loc:"E10 · Waltham Forest", stn:"Leyton", legs:[{line:"central", ride:16}], term:"liverpool", head:3, ch:0, brg:40, lat:51.5566, lon:-0.0053, corr:"central-epping",
+{id:"leyton", name:"Leyton", loc:"E10 · Waltham Forest", stn:"Leyton", legs:[{line:"central", ride:16}], term:"liverpool", head:3, ch:0, w:{legs:[{line:"central", ride:3},{line:"mildmay", ride:18}], term:"calbarn", head:3, ch:1}, brg:40, lat:51.5566, lon:-0.0053, corr:"central-epping",
  parking:3, walk:5, green:4, amen:4, rent:1800, boro:"Waltham Forest", tenantPark:3, tenantNote:"Permits open to tenants; the terraces have no off-street space.", buy:705000,
  vibe:"Francis Road is the strip everyone actually means when they say Leytonstone is up-and-coming — bakery, bookshop, wine bar, all on one street. Thirty-five minutes, Central line, and cheaper than Walthamstow.",
  watch:"Controlled parking over much of it and the housing is mostly two-up-two-down terraces without off-street space.",
  park:"Coronation Gardens, Hackney Marshes, Wanstead Flats"},
 
-{id:"poplar", name:"Poplar", loc:"E14 · Tower Hamlets", stn:"Poplar", legs:[{line:"dlr", ride:9}], term:"towergw", head:5, ch:0, brg:100, lat:51.5077, lon:-0.0173, corr:"dlr-se",
+{id:"poplar", name:"Poplar", loc:"E14 · Tower Hamlets", stn:"Poplar", legs:[{line:"dlr", ride:9}], term:"towergw", head:5, ch:0, w:{legs:[{line:"dlr", ride:12},{line:"mildmay", ride:18}], term:"calbarn", head:5, ch:1}, brg:100, lat:51.5077, lon:-0.0173, corr:"dlr-se",
  parking:2, walk:4, green:3, amen:4, rent:2100, boro:"Tower Hamlets", tenantPark:1, tenantNote:"Tower Hamlets car-free register covers most blocks here.", buy:602000,
  vibe:"Twenty-four minutes door to door — among the fastest here — for a median house price around £600k, which is remarkable this close in. Canary Wharf's amenities are a short walk and it has been picked out as one of the areas people are moving to now.",
  watch:"Mostly flats and new build, with estate housing between them; quality varies a lot street to street. Parking is limited and often a paid space in a block.",
  park:"Langdon Park, Bartlett Park, Poplar Recreation Ground"},
 
-{id:"tottenhamhale", name:"Tottenham Hale", loc:"N17 · Haringey", stn:"Tottenham Hale", legs:[{line:"weaver", ride:17}], term:"liverpool", head:8, ch:0, brg:356, lat:51.5882, lon:-0.0600, corr:"weaver-leavalley",
+{id:"tottenhamhale", name:"Tottenham Hale", loc:"N17 · Haringey", stn:"Tottenham Hale", legs:[{line:"weaver", ride:17}], term:"liverpool", head:8, ch:0, w:{legs:[{line:"victoria", ride:7},{line:"mildmay", ride:3}], term:"calbarn", head:8, ch:1}, brg:356, lat:51.5882, lon:-0.0600, corr:"weaver-leavalley",
  parking:3, walk:4, green:5, amen:4, rent:1900, boro:"Haringey", tenantPark:1, tenantNote:"The regeneration blocks were consented car-free \u2014 tenants cannot apply for a permit.", buy:550000,
  vibe:"A large regeneration with thousands of new homes, the Victoria line as a second route, and Walthamstow Wetlands and the Lea Valley on the doorstep. Median house around £550k, 38 minutes to the office.",
  watch:"The new-build blocks are much better than the older stock around them, and the gyratory end of it is not somewhere you would choose to walk.",
@@ -838,13 +871,18 @@ AREAS.forEach(a => { const r = ONS_RENT[a.boro]; if(r){ a.boroRent = r.avg; a.bo
    3. STATE
    ========================================================================== */
 const DEFAULTS = {
-  target: 45,        // the door-to-door ceiling, in minutes
+  target: 45,        // Tisha's door-to-door ceiling
+  targetB: 60,       // yours — two days a week tolerates more than five does
+  twoJobs: true,     // the Wayve role is not confirmed; switch this off to plan without it
+  daysA: 5,          // days a week Tisha travels to Aldgate
+  daysB: 2,          // days a week you would travel to N7
   walkMins: 8,       // walk from front door to home station
   changeMins: 5,     // penalty per interchange
   needParking: false,
   showOver: true,   // keep near-misses visible rather than silently hiding them
   maxRent: 2000,    // monthly rent budget — you are renting, so this is the binding number
   sort: "match",
+  tradeView: "both",
   mapView: "geo",   // "geo" = real geography, "time" = the polar isochrone
   labelAll: false,
   weights: { commute:5, parking:4, walk:4, green:4, amen:3, value:3 }
@@ -853,7 +891,12 @@ const WEIGHT_META = [
   ["commute","Short commute"], ["parking","Parking for the car"], ["walk","Walkable streets"],
   ["green","Parks and green space"], ["amen","Shops, cafés, life"], ["value","Value for money"]
 ];
-const SCALE_MAX = 60;   // every journey strip is drawn on this shared 0–60 min scale
+/* Journey strips are drawn on a fixed scale so two cards can be compared by eye.
+   The two commutes get different scales — Tisha's tops out around an hour, the
+   second one runs past 80 — but every card uses the same pair, so comparison
+   across cards still holds. */
+const SCALE_MAX = 60;
+const SCALE_MAX_B = 90;
 
 let state = load();
 let shortlist = loadList();
@@ -878,21 +921,22 @@ function save(){
    Every one of those five is a real cost, and four of them are invisible on a
    train timetable. That is precisely why "22 minutes to London" is a lie.
    ========================================================================== */
-function journey(a){
+function journey(a, spec){
+  spec = spec || { legs:a.legs, term:a.term, head:a.head, ch:a.ch };
   const segs = [];
   segs.push({ kind:"walk",  mins:state.walkMins, label:"Walk", detail:"Front door to "+a.stn+" station" });
 
-  const wait = Math.max(1, Math.min(Math.round(a.head/2), 8));
-  segs.push({ kind:"wait", mins:wait, label:"Wait", detail:"Typical wait — trains about every "+a.head+" min at peak" });
+  const wait = Math.max(1, Math.min(Math.round(spec.head/2), 8));
+  segs.push({ kind:"wait", mins:wait, label:"Wait", detail:"Typical wait — trains about every "+spec.head+" min at peak" });
 
-  a.legs.forEach((leg,i) => {
-    if(i > 0) segs.push({ kind:"change", mins:state.changeMins, label:"Change", detail:"Interchange at Whitechapel" });
+  spec.legs.forEach((leg,i) => {
+    if(i > 0) segs.push({ kind:"change", mins:state.changeMins, label:"Change", detail:"Interchange" });
     const L = LINES[leg.line];
     segs.push({ kind:"ride", mins:leg.ride, label:L.name, colour:L.c, dark:!!L.dark,
                 detail:L.name+" — "+leg.ride+" min in the carriage" });
   });
 
-  const t = TERMINI[a.term];
+  const t = TERMINI[spec.term];
   segs.push({ kind:"walk", mins:t.walk, label:"Walk", detail:t.note+" — "+t.walk+" min from "+t.name+" to the office" });
 
   const total = segs.reduce((s,x)=>s+x.mins, 0);
@@ -905,18 +949,26 @@ function journey(a){
    first looks fine — so the binding constraint is the lower of the two. */
 function effPark(a){ return Math.min(a.parking, a.tenantPark); }
 
-function verdict(total){
-  if(total <= state.target - 5) return { cls:"v-good",  text:"Comfortable", tone:"good" };
-  if(total <= state.target)     return { cls:"v-warn",  text:"Right on the limit", tone:"warn" };
-  return { cls:"v-bad", text:"Over by "+(total-state.target)+" min", tone:"bad" };
+function verdict(total, ceiling){
+  const c = ceiling || state.target;
+  if(total <= c - 5) return { cls:"v-good",  text:"Comfortable", tone:"good" };
+  if(total <= c)     return { cls:"v-warn",  text:"Right on the limit", tone:"warn" };
+  return { cls:"v-bad", text:"Over by "+(total-c)+" min", tone:"bad" };
 }
 
 /* Weighted match. Each factor is scored 0–5, then weighted by how much you said
    it matters. Reported as a percentage of the best you could possibly score. */
-function score(a, j){
-  const commute = j.total <= 25 ? 5
-                : j.total >= state.target + 12 ? 0
-                : 5 * (1 - (j.total - 25) / ((state.target + 12) - 25));
+function score(a, j, jb){
+  const band = (t, ceiling) => t <= 25 ? 5
+              : t >= ceiling + 12 ? 0
+              : 5 * (1 - (t - 25) / ((ceiling + 12) - 25));
+  /* Both commutes matter, but not equally — weight each by how many days a week
+     it is actually made. Five days at Aldgate outvotes two days at N7. */
+  let commute = band(j.total, state.target);
+  if(state.twoJobs && jb){
+    const wA = state.daysA, wB = state.daysB;
+    commute = (wA * commute + wB * band(jb.total, state.targetB)) / (wA + wB);
+  }
   /* Value is scored on monthly rent against your budget: comfortably under
      scores 5, right at it scores ~2.5, well over scores 0. */
   const b = state.maxRent;
@@ -930,14 +982,22 @@ function score(a, j){
   return { pct: max ? Math.round(got / max * 100) : 0, parts };
 }
 
+/* Weekly door-to-door burden for the household, both directions, both people.
+   This is the number that actually changes when someone's office changes. */
+function weekly(j, jb){
+  return state.daysA * 2 * j.total + (state.twoJobs && jb ? state.daysB * 2 * jb.total : 0);
+}
+
 function evaluate(){
   return AREAS.map(a => {
-    const j = journey(a);
-    return { a, j, s: score(a, j), v: verdict(j.total) };
+    const j  = journey(a);
+    const jb = a.w ? journey(a, a.w) : null;
+    return { a, j, jb, v: verdict(j.total), vb: jb ? verdict(jb.total, state.targetB) : null,
+             wk: weekly(j, jb), s: score(a, j, jb) };
   });
 }
 function passes(r){
-  if(r.j.total > state.target && !state.showOver) return false;
+  if(!state.showOver && (r.j.total > state.target || (state.twoJobs && r.jb && r.jb.total > state.targetB))) return false;
   if(state.needParking && effPark(r.a) < 3) return false;
   if(r.a.rent > state.maxRent) return false;
   return true;
@@ -946,6 +1006,8 @@ function sorted(rows){
   const by = {
     match:   (x,y) => y.s.pct - x.s.pct || x.j.total - y.j.total,
     time:    (x,y) => x.j.total - y.j.total,
+    weekly:  (x,y) => x.wk - y.wk,
+    fair:    (x,y) => Math.max(x.j.total, x.jb ? x.jb.total : 0) - Math.max(y.j.total, y.jb ? y.jb.total : 0),
     parking: (x,y) => effPark(y.a) - effPark(x.a) || x.j.total - y.j.total,
     walk:    (x,y) => y.a.walk - x.a.walk || x.j.total - y.j.total,
     green:   (x,y) => y.a.green - x.a.green || x.j.total - y.j.total,
@@ -979,8 +1041,10 @@ const AMEN_WORDS = ["","Very thin","Basic","Decent","Good","Everything you need"
 
 /* The journey strip. Drawn on a shared 0–60 minute scale so that two cards can
    be compared by eye alone, with a dashed line at your limit. */
-function strip(j){
-  const pc = m => (m / SCALE_MAX * 100);
+function strip(j, ceiling, scaleMax){
+  const target = ceiling || state.target;
+  const span = scaleMax || SCALE_MAX;
+  const pc = m => (m / span * 100);
   let bars = "";
   j.segs.forEach(s => {
     const w = pc(s.mins);
@@ -988,25 +1052,26 @@ function strip(j){
     const show = w > 7 ? '<span class="lbl">'+s.mins+'</span>' : '';
     bars += '<div class="seg '+s.kind+(s.dark?" dark":"")+'" style="width:'+w.toFixed(2)+'%;'+style+'" title="'+esc(s.label+" · "+s.mins+" min — "+s.detail)+'">'+show+'</div>';
   });
-  const tpc = pc(state.target);
+  const tpc = pc(target);
   return '<div class="stripwrap">'+
     '<div class="tmark" style="left:0">0</div>'+
-    '<div class="tmark t-target" style="left:'+tpc.toFixed(2)+'%">'+state.target+' min</div>'+
-    '<div class="tmark" style="left:100%; transform:translateX(-100%)">'+SCALE_MAX+'</div>'+
+    '<div class="tmark t-target" style="left:'+tpc.toFixed(2)+'%">'+target+' min</div>'+
+    (tpc < 88 ? '<div class="tmark" style="left:100%; transform:translateX(-100%)">'+span+'</div>' : '')+
     '<div class="strip">'+bars+
       '<div class="target" style="left:'+tpc.toFixed(2)+'%"></div>'+
     '</div></div>';
 }
 
-function routeLine(a, j){
+function routeLine(a, j, spec){
+  spec = spec || a;
   let h = '<div class="route"><span class="lchip"><i style="background:var(--ink-3)"></i>'+esc(a.stn)+'</span>';
-  a.legs.forEach(leg => {
+  spec.legs.forEach(leg => {
     const L = LINES[leg.line];
     h += '<span class="arrow">→</span><span class="lchip"><i style="background:'+L.c+'"></i>'+esc(L.name)+'</span>';
   });
   h += '<span class="arrow">→</span><span class="lchip"><i style="background:var(--accent)"></i>'+esc(j.term.name)+'</span>';
   h += '<span class="arrow">→</span><span style="color:var(--ink-3)">'+j.term.walk+' min walk to the office</span>';
-  if(a.ch > 0) h += '<span style="color:var(--ink-4); font-size:12px">· '+a.ch+' change</span>';
+  if(spec.ch > 0) h += '<span style="color:var(--ink-4); font-size:12px">· '+spec.ch+' change'+(spec.ch>1?'s':'')+'</span>';
   return h + "</div>";
 }
 </script>
@@ -1021,7 +1086,11 @@ function renderConsole(){
   const c = document.getElementById("console");
   c.innerHTML =
   '<div class="panel"><header><span class="eyebrow">The hard limits</span></header><div class="body">'+
-    ctlRange("target","Door-to-door ceiling",state.target,30,60,1," min","The whole page is measured against this line. Drag it and everything re-ranks.")+
+    ctlSwitch("twoJobs","Plan for two commutes", state.twoJobs, "The Wayve role is not confirmed. Turn this off to see the shortlist as it stands if it does not convert.")+
+    ctlRange("target","Tisha\u2019s ceiling — Aldgate",state.target,30,60,1," min","Five days a week, so this is the binding one.")+
+    (state.twoJobs ? ctlRange("targetB","Your ceiling — Wayve, N7",state.targetB,30,90,1," min","Only two days a week, so it can reasonably be looser.")+
+      ctlRange("daysA","Tisha, days a week",state.daysA,1,5,1,"","")+
+      ctlRange("daysB","You, days a week",state.daysB,0,5,1,"","Weights how much each commute counts in the ranking.") : "")+
     ctlRange("walkMins","Walk to your home station",state.walkMins,3,15,1," min","Applied to every area equally so the comparison is fair. Drop it to 5 to model buying nearer a station.")+
     ctlRange("changeMins","Cost of each interchange",state.changeMins,2,10,1," min","Stairs, platform, and waiting for the next train.")+
     ctlSwitch("needParking","Must be parkable as a tenant", state.needParking, "Hides anywhere a rental is unlikely to come with anywhere to put the car — including permit-free new builds.")+
@@ -1086,15 +1155,27 @@ function card(r, rank){
         '<span class="verdict '+v.cls+'">'+v.text+'</span></h3>'+
         '<div class="loc">'+esc(a.loc)+' · from '+esc(a.stn)+'</div></div>'+
       '<div class="timebox">'+
-        '<div class="big" style="color:var(--'+v.tone+')">'+j.total+'<small>min</small></div>'+
+        '<div class="twotimes">'+
+          '<div class="onetime"><span class="wholabel">Tisha → Aldgate</span>'+
+            '<span class="big" style="color:var(--'+v.tone+')">'+j.total+'<small>min</small></span></div>'+
+          (state.twoJobs && r.jb ? '<div class="onetime"><span class="wholabel">You → Wayve</span>'+
+            '<span class="big" style="color:var(--'+r.vb.tone+')">'+r.jb.total+'<small>min</small></span></div>' : '')+
+        '</div>'+
         '<div class="matchwrap" title="Weighted match against your priorities">'+
           '<div class="matchbar"><i style="width:'+s.pct+'%"></i></div>'+
-          '<span class="matchnum">'+s.pct+'% match</span></div>'+
+          '<span class="matchnum">'+s.pct+'% match</span>'+
+          (state.twoJobs && r.jb ? '<span class="wk">'+(r.wk/60).toFixed(1)+' h/week travelling</span>' : '')+
+        '</div>'+
       '</div>'+
     '</div>'+
-    '<div class="strip-area">'+ strip(j) + routeLine(a, j) +
+    '<div class="strip-area">'+
+      '<div class="striplab">Tisha → Aldgate · '+state.daysA+' days a week</div>'+
+      strip(j) + routeLine(a, j) +
       '<div class="legend"><span style="color:var(--ink-4)">Allow about '+j.badday+
       ' min on a bad day (delays, a missed connection, weather).</span></div>'+
+      (state.twoJobs && r.jb ? '<div class="striplab second">You → Wayve, N7 · '+state.daysB+' days a week</div>'+
+        strip(r.jb, state.targetB, SCALE_MAX_B) + routeLine(a, r.jb, a.w) +
+        '<div class="legend"><span style="color:var(--ink-4)">Allow about '+r.jb.badday+' min on a bad day.</span></div>' : '')+
     '</div>'+
     '<div class="traits">'+
       traitCell("parking","Parking on street",a.parking,PARK_WORDS[a.parking])+
@@ -1531,6 +1612,62 @@ function frontier(rows){
 function renderPrices(){
   const rows = evaluate().filter(passes).filter(r => r.a.rent);
   const host = document.getElementById("panel-prices");
+  const both = state.twoJobs && state.tradeView !== "rent";
+  if(both && rows.length >= 3){
+    const front = jointFrontier(rows);
+    host.innerHTML = '<div class="chartcard">'+
+      '<div class="maphead"><div class="seg-ctl" role="tablist">'+
+        '<button role="tab" data-trade="both" aria-selected="true">Both commutes</button>'+
+        '<button role="tab" data-trade="rent" aria-selected="false">Rent against commute</button>'+
+      '</div></div>'+
+      '<div class="charthead"><h2>Where both of you can actually live</h2>'+
+      '<p>One axis each. The shaded box in the bottom-left is everywhere that clears '+
+      'Tisha\u2019s '+state.target+' minutes <em>and</em> your '+state.targetB+'. The magenta points are the joint frontier — '+
+      'nothing else on this chart beats them on both journeys at once. Outside the box, one of you is over the limit every week.</p></div>'+
+      bothSvg(rows)+
+      '<div class="tablewrap" style="margin-top:16px"><table><thead><tr><th>Works for both</th>'+
+      '<th>Tisha</th><th>You</th><th>Household, per week</th><th>Park as a tenant</th><th>Rent</th></tr></thead><tbody>'+
+      front.slice().sort((a,b)=>a.wk-b.wk).map(r =>
+        '<tr><th style="text-transform:none; font-size:14px; color:var(--ink); letter-spacing:0">'+esc(r.a.name)+
+        '<div style="font-weight:400; color:var(--ink-3); font-size:12px">'+esc(r.a.loc)+'</div></th>'+
+        '<td class="num" style="color:var(--'+r.v.tone+')">'+r.j.total+' min</td>'+
+        '<td class="num" style="color:var(--'+r.vb.tone+')">'+r.jb.total+' min</td>'+
+        '<td class="num">'+(r.wk/60).toFixed(1)+' h</td>'+
+        '<td class="num" style="color:'+(effPark(r.a) <= 2 ? "var(--bad)" : effPark(r.a) === 3 ? "var(--warn)" : "var(--good)")+'">'+effPark(r.a)+'/5</td>'+
+        '<td class="num">'+money(r.a.rent)+'</td></tr>').join("")+
+      '</tbody></table></div>'+
+      (() => {
+        /* The joint frontier is dominated by places a tenancy will not let you park
+           at, which is not much use to you — so here is the same calculation run
+           again over only the areas where you could keep the car. */
+        const parkable = rows.filter(r => effPark(r.a) >= 4);
+        const pf = jointFrontier(parkable).slice().sort((a,b) => a.wk - b.wk);
+        if(!pf.length) return "";
+        return '<div class="charthead" style="margin-top:26px"><h2 style="font-size:17px">…and the same thing again, for places you could keep the car</h2>'+
+          '<p>The frontier above is made almost entirely of areas where a tenancy carries no right to park. Restricting to somewhere you could '+
+          'actually keep a car gives a different and much more usable answer'+
+          (pf.length === 1 ? ' — and, as it happens, a single one. <b>'+esc(pf[0].a.name)+'</b> beats every other parkable area on '+
+            'both journeys at the same time, so nothing else here is worth arguing for on commute grounds alone.' : '.')+'</p></div>'+
+          '<div class="tablewrap"><table><thead><tr><th>Works for both, and parkable</th>'+
+          '<th>Tisha</th><th>You</th><th>Household, per week</th><th>Park as a tenant</th><th>Rent</th></tr></thead><tbody>'+
+          pf.map(r => '<tr><th style="text-transform:none; font-size:14px; color:var(--ink); letter-spacing:0">'+esc(r.a.name)+
+            '<div style="font-weight:400; color:var(--ink-3); font-size:12px">'+esc(r.a.loc)+'</div></th>'+
+            '<td class="num" style="color:var(--'+r.v.tone+')">'+r.j.total+' min</td>'+
+            '<td class="num" style="color:var(--'+r.vb.tone+')">'+r.jb.total+' min</td>'+
+            '<td class="num">'+(r.wk/60).toFixed(1)+' h</td>'+
+            '<td class="num" style="color:var(--good)">'+effPark(r.a)+'/5</td>'+
+            '<td class="num">'+money(r.a.rent)+'</td></tr>').join("")+
+          '</tbody></table></div>';
+      })()+
+      '<p class="mapnote" style="text-align:left; margin-top:14px; max-width:80ch">The second commute is modelled the same way as the first, '+
+      'and lands at 3 Brandon Road N7 — whose nearest station is Caledonian Road &amp; Barnsbury on the <b>Mildmay line</b>, which runs to '+
+      '<b>Stratford</b>. That is why the answer moved: the first commute rewards Liverpool Street and Fenchurch Street, the second rewards '+
+      'Stratford and Highbury, and only a few corridors do both. Turn off \u201cplan for two commutes\u201d in the panel to see the '+
+      'single-commute ranking again.</p>'+
+    '</div>';
+    host.querySelectorAll("[data-trade]").forEach(b => b.onclick = () => { state.tradeView = b.dataset.trade; save(); renderPrices(); });
+    return;
+  }
   if(rows.length < 3){
     host.innerHTML = '<div class="empty"><h3>Not enough areas to plot</h3><p>Loosen the filters on the Explore tab.</p></div>';
     return;
@@ -1607,6 +1744,10 @@ function renderPrices(){
     '</tbody></table></div>';
 
   host.innerHTML = '<div class="chartcard">'+
+    (state.twoJobs ? '<div class="maphead"><div class="seg-ctl" role="tablist">'+
+      '<button role="tab" data-trade="both" aria-selected="false">Both commutes</button>'+
+      '<button role="tab" data-trade="rent" aria-selected="true">Rent against commute</button>'+
+    '</div></div>' : '')+
     '<div class="charthead"><h2>What the commute actually costs</h2>'+
     '<p>Every area plotted by monthly rent for a 2-bed against door-to-door commute. '+
     'The magenta points form the <b>efficient frontier</b>: nothing else on this chart is both cheaper and quicker. '+
@@ -1619,6 +1760,64 @@ function renderPrices(){
     'A count marked ⚠ is under 25 sales — thin enough that the median could move with one unusual transaction. Poplar is the one to watch on this chart: '+
     'it reaches the frontier on a small number of house sales in a district that is overwhelmingly flats.</p>'+
   '</div>';
+}
+
+
+/* ============================================================================
+   9d. BOTH COMMUTES AT ONCE
+   The honest picture of a two-office household: one axis each. The box in the
+   bottom-left is the set of places that clear both ceilings, and the frontier
+   inside it is the set nothing else beats on both journeys simultaneously.
+   Anywhere outside the box, somebody is over their limit every week.
+   ========================================================================== */
+function jointFrontier(rows){
+  return rows.filter(r => !rows.some(o =>
+    o !== r && o.j.total <= r.j.total && o.jb.total <= r.jb.total &&
+    (o.j.total < r.j.total || o.jb.total < r.jb.total)));
+}
+
+function bothSvg(rows){
+  const W = 1000, H = 620, L = 76, R = 30, T = 26, B = 54;
+  const xs = rows.map(r => r.j.total), ys = rows.map(r => r.jb.total);
+  const x0 = Math.min(...xs) - 2, x1 = Math.max(...xs) + 2;
+  const y0 = Math.min(...ys) - 3, y1 = Math.max(...ys) + 3;
+  const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const Y = v => H - B - (v - y0) / (y1 - y0) * (H - T - B);
+
+  let g = "";
+  for(let v = Math.ceil(y0/10)*10; v <= y1; v += 10)
+    g += '<line x1="'+L+'" y1="'+Y(v).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(v).toFixed(1)+'" stroke="var(--line-soft)" />'+
+         '<text class="axis-l" x="'+(L-10)+'" y="'+(Y(v)+3.5).toFixed(1)+'" text-anchor="end">'+v+'</text>';
+  for(let v = Math.ceil(x0/5)*5; v <= x1; v += 5)
+    g += '<line x1="'+X(v).toFixed(1)+'" y1="'+T+'" x2="'+X(v).toFixed(1)+'" y2="'+(H-B)+'" stroke="var(--line-soft)" />'+
+         '<text class="axis-l" x="'+X(v).toFixed(1)+'" y="'+(H-B+18)+'" text-anchor="middle">'+v+'</text>';
+
+  /* the box that clears both ceilings */
+  const bx = Math.min(W-R, X(state.target)), by = Math.max(T, Y(state.targetB));
+  const box = '<rect x="'+L+'" y="'+by.toFixed(1)+'" width="'+(bx-L).toFixed(1)+'" height="'+(H-B-by).toFixed(1)+'" '+
+      'fill="var(--good)" opacity=".06" />'+
+    '<line x1="'+bx.toFixed(1)+'" y1="'+T+'" x2="'+bx.toFixed(1)+'" y2="'+(H-B)+'" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5" />'+
+    '<line x1="'+L+'" y1="'+by.toFixed(1)+'" x2="'+(W-R)+'" y2="'+by.toFixed(1)+'" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 5" />'+
+    '<text class="axis-t" x="'+(bx-8).toFixed(1)+'" y="'+(T+13)+'" text-anchor="end" fill="var(--accent)">Tisha’s '+state.target+' min</text>'+
+    '<text class="axis-t" x="'+(W-R)+'" y="'+(by-7).toFixed(1)+'" text-anchor="end" fill="var(--accent)">your '+state.targetB+' min</text>';
+
+  const front = jointFrontier(rows), fids = new Set(front.map(r => r.a.id));
+  let marks = ""; const labels = [];
+  rows.forEach(r => {
+    const cx = X(r.j.total), cy = Y(r.jb.total);
+    const isF = fids.has(r.a.id), star = shortlist.includes(r.a.id);
+    marks += '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(isF?7:5)+'" class="'+(isF?"dot-front":"dot-plain")+
+      '" stroke="var(--surface)" stroke-width="2"><title>'+esc(r.a.name+" — Tisha "+r.j.total+" min, you "+r.jb.total+
+      " min, "+(r.wk/60).toFixed(1)+" h/week between you · parking "+effPark(r.a)+"/5 · "+money(r.a.rent)+"/mo")+'</title></circle>';
+    if(star) marks += '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="12" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".6" />';
+    if(isF || star) labels.push({ name:r.a.name, x:cx, y:cy, th:Math.atan2(1,-0.6), starred:star, colour:"var(--ink-4)" });
+  });
+
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Each area plotted by Tisha’s commute against yours, with the box that clears both ceilings">'+
+    g + box + marks + declutter(labels, W) +
+    '<text class="axis-t" x="'+((L+W-R)/2)+'" y="'+(H-8)+'" text-anchor="middle">Tisha → Aldgate, minutes</text>'+
+    '<text class="axis-t" transform="translate(16,'+((T+H-B)/2)+') rotate(-90)" text-anchor="middle">You → Wayve N7, minutes</text>'+
+  '</svg>';
 }
 
 /* ============================================================================
@@ -1673,6 +1872,28 @@ function renderMethod(){
   '<p>The same logic explains <b>Abbey Wood</b>. It is the Elizabeth line’s south-eastern terminus, so it works; everywhere past it '+
   '(<b>Belvedere</b>, <b>Erith</b>, and Bexley beyond) drops onto Southeastern and immediately loses ten to fifteen minutes to a change or to '+
   'that Cannon Street walk. Abbey Wood is not just a good option in south-east London — it is the edge of what is reachable at all.</p>'+
+
+  '<h3>Two commutes is a different problem, not a bigger one</h3>'+
+  '<p>A single-destination optimiser cannot answer this. Adding a second office does not just add a column — it changes which '+
+  'corridors are good, because the two offices reward completely different geography.</p>'+
+  '<ul>'+
+  '<li><b>Aldgate</b> rewards Liverpool Street (9 min walk) and Fenchurch Street (5 min). That points east and north-east: '+
+  'the Essex corridors, c2c, the Central line.</li>'+
+  '<li><b>3 Brandon Road, N7</b> is 620 yards from <b>Caledonian Road &amp; Barnsbury</b>, which is on the <b>Mildmay line</b> — '+
+  'and the Mildmay line runs to <b>Stratford</b> and <b>Highbury &amp; Islington</b>. So the second commute rewards being able to reach '+
+  'Stratford or Highbury quickly, which is a different map entirely.</li>'+
+  '</ul>'+
+  '<p><b>The clearest casualty is Upminster.</b> It was the top recommendation for four rounds — 39 minutes to Aldgate, a driveway with '+
+  'every house, well inside budget. Its commute to N7 is <b>72 minutes</b>, the worst on this entire list. It is superb at one of your two '+
+  'journeys and hopeless at the other, and that is not a compromise, it is a veto.</p>'+
+  '<p><b>The winner is the Central line, for a structural reason.</b> Wanstead, Snaresbrook, South Woodford, Wood Street and Highams Park '+
+  'all reach Stratford in well under fifteen minutes <em>and</em> Liverpool Street directly. That double connection is rare. Run the joint '+
+  'frontier over only the areas where a tenancy would let you keep the car and exactly one name survives: <b>Wanstead</b>, at 39 minutes for '+
+  'Tisha and 47 for you. It beats every other parkable area on both journeys simultaneously.</p>'+
+  '<p>Two caveats worth stating plainly. The Wayve role is <b>not confirmed</b> — there is a switch in the panel to turn the second commute '+
+  'off and see the single-commute ranking again, and the honest thing is to keep checking both until you know. And the second commute is only '+
+  '<b>two days a week</b>, which is why the ranking weights it at two-fifths of Tisha\\u2019s and why a looser ceiling for it is reasonable. '+
+  'Change the days sliders and the answer moves.</p>'+
 
   '<h3>Renting changes the parking question completely</h3>'+
   '<div class="callout"><p><b>This is the single most important thing on this page for you.</b> Many newer London developments were granted '+
@@ -1751,24 +1972,21 @@ function renderMethod(){
   '</ul>'+
 
   '<h3>If you want the short answer</h3>'+
-  '<p>Renting rather than buying changes this, and mostly for the better — the areas that were priced out of reach are back in play, '+
-  'and the constraint that bites instead is whether you can park.</p>'+
-  '<p><b>The shortlist, at around £2,000 a month with somewhere to put the car:</b></p>'+
-  '<ul>'+
-  '<li><b>Upminster</b> — 39 min, about £1,700. Still the strongest overall. A drive comes with almost every house let, and it is comfortably '+
-  'inside both the time and the money.</li>'+
-  '<li><b>Wanstead</b> — 39 min, about £1,900. <b>Back on the list.</b> It fell off when we were buying, because the median house is £935k. '+
-  'Renting removes that barrier entirely, and it is still the nicest all-rounder here.</li>'+
-  '<li><b>Highams Park</b> — 44 min, about £1,750. Lake, forest, drives as standard, and the most underrated place on this list.</li>'+
-  '<li><b>Romford</b> (44 min, £1,550) and <b>Goodmayes</b> (39 min, £1,550) if the budget matters more than the postcode.</li>'+
-  '<li><b>Shenfield</b> (44 min, £1,800) and <b>South Woodford</b> (43 min, £1,850) for the most space.</li>'+
-  '</ul>'+
-  '<p><b>The trap to avoid.</b> <b>Stratford</b> (26 min), <b>Custom House</b> (34 min), <b>Poplar</b> (24 min), <b>Canada Water</b> (30 min), '+
-  '<b>Royal Victoria</b> (35 min) and <b>Tottenham Hale</b> (38 min) are the quickest and among the best value on this entire page — and every '+
-  'one of them is dominated by developments where a tenancy carries no right to park. If you are keeping the car, they are not really options. '+
-  'If you ever decided not to, they would be the best options on the list by a wide margin, which is worth knowing.</p>'+
-  '<p><b>The one thing to check first.</b> Before any viewing: is the address in a car-free or permit-free development? It is a yes/no fact, '+
-  'the council will confirm it, and it decides more than anything else on this page.</p>'+
+  '<p><b>Wanstead.</b> Two rounds ago it was the pick, then real sold prices ruled it out on a £935k median, then renting made that irrelevant, '+
+  'and now a second commute makes it the only parkable area that survives the joint frontier. 39 minutes for Tisha, 47 for you, about '+
+  '£1,900 a month, streets you can park on, Epping Forest at the end of the road. It has arrived at the top by four different routes.</p>'+
+  '<p><b>The others worth viewing,</b> all of which clear both ceilings and are parkable: <b>Wood Street</b> (40/49, £1,700) is the value pick '+
+  'and quietly good; <b>Snaresbrook</b> (41/49, £1,900) is the same trains with bigger houses; <b>South Woodford</b> (43/51, £1,850) has the '+
+  'easiest parking of the three; <b>Highams Park</b> (44/53, £1,750) is furthest but has the lake and the forest.</p>'+
+  '<p><b>What the second commute kills.</b> <b>Upminster</b> — the pick for four rounds — is 72 minutes to N7 and has to come off. So do '+
+  'Dagenham Heathway (70), Gallions Reach (72), and most of south-east London: Blackheath 63, Woolwich 62, Greenwich 62. Anything reached '+
+  'through Fenchurch Street or Cannon Street is now working against you.</p>'+
+  '<p><b>And if the car were negotiable</b>, the joint frontier is <b>Forest Gate</b> (29/43, 7.7 h a week between you), '+
+  '<b>Walthamstow Central</b> (36/38) and <b>Tottenham Hale</b> (38/34) — all better on pure travel time than anything you can park at, '+
+  'and all effectively car-free. That is the real trade you are making, and it is worth about two hours a week.</p>'+
+  '<p><b>If Wayve does not convert</b>, switch off “plan for two commutes” and the earlier answer returns: Upminster, Wanstead and '+
+  'Highams Park, with Upminster back on top. Worth knowing before you sign a two-year tenancy on the strength of a job you have not been '+
+  'offered yet.</p>'+
   '</div>';
 }
 
