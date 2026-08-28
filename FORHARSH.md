@@ -183,6 +183,27 @@ empty. That's not a rendering artifact, that's the actual shape of the rail netw
 address, and it means the search area is really "east and north-east London" whether you like it
 or not.
 
+### Making it look like an actual map
+
+The first version of the geographic view was a hand-traced Thames and some dots. Recognisable, but
+you had to work at it. The obvious upgrade is an OpenStreetMap slippy map — and that is exactly what
+the CSP forbids: tiles are images from a blocked host, so Leaflet would load and then draw nothing.
+
+The way through was to stop thinking about *tiles* and start thinking about *geometry*. Tiles are
+pictures of a map; what the page actually needs is the map's shape, and shapes are just numbers.
+Greater London's 33 borough boundaries are open data and, as it turns out, reachable from here as
+GeoJSON — 44,515 coordinate pairs and 1.3 MB, which is far too much to inline.
+
+So: Douglas-Peucker, at a tolerance of about 90 metres. That is roughly two pixels at the scale this
+map draws at, so nothing visible is lost, and it takes the file from **44,515 points to 2,178 — 39 KB**.
+Inlined, it costs one round trip of nothing, works offline, works under the CSP, and will still work
+when whichever tile provider you picked changes its terms.
+
+**Lesson: when you are blocked from the standard component, ask what the component was actually
+giving you.** "A map" felt like an indivisible dependency. It isn't — it's a basemap, a projection,
+and interaction, and here only the first was really needed. Wanting *the library* rather than *the
+capability* is how a hard constraint turns into a dead end instead of a design.
+
 ### The geographic map, and a constraint that turned out to be a gift
 
 The natural way to build "show me where these places are" is Leaflet plus OpenStreetMap tiles.

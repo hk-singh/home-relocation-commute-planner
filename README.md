@@ -17,6 +17,11 @@ Scores 65 London areas against four constraints at once:
   so tenants can never hold a resident permit. Areas are scored on the lower of the two.
 - **Walkability** and **green space** — the neighbourhood you'd actually live in.
 
+The maps use real Greater London borough boundaries, simplified from open GeoJSON (44,515 points to
+2,178, ~90 m tolerance) and inlined as vector geometry — not map tiles, which a published artifact's
+CSP blocks outright. Both offices are marked, and areas are coloured by whether *both* commutes clear
+their ceilings.
+
 Five views: a ranked list with each commute drawn on a shared 60-minute scale, a side-by-side
 shortlist, a polar time map (bearing = compass direction, radius = minutes), and a written
 method with the assumptions and caveats spelled out, plus a price-against-commute chart that picks
