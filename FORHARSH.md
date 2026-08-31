@@ -564,6 +564,73 @@ and the only area scoring five out of five for walkability, green space and park
    authority it does not have. Surfacing it turns the tool from an oracle into an argument you can
    have properly.
 
+### A slider that moved one step and stopped
+
+Reported symptom: dragging a slider moved it by a single minute and then the page froze. Two causes,
+and I found the wrong one first.
+
+**The real bug** was this line, in the handler for every slider's `input` event:
+
+```js
+save(); renderConsole(); renderAll();
+```
+
+`renderConsole()` rebuilds the whole control panel — *including the slider currently under the
+pointer*. The browser was mid-drag on an element that no longer existed, so the drag died instantly.
+That is the one-step-and-stop. Then `renderAll()` rebuilt 65 cards (about 40 ms) and `save()` wrote
+localStorage, on every event, which is the freeze.
+
+The fix splits the work by how expensive it is: the control's own label updates in place, the counts
+refresh on the next animation frame, the full card rebuild is debounced to 130 ms after the last
+input, and the save waits for `change` — the end of the drag.
+
+**The other cause I only found by measuring.** Once it was smooth I wrote a Playwright test to prove
+it, and it still reported failure — so I nearly "fixed" it again. The test was wrong: it compared the
+value *before mousedown* to the value at release, but clicking a range input jumps the thumb to the
+click point first. The drag had actually travelled 64 → 47, perfectly monotonically. My assertion was
+measuring the wrong thing.
+
+But that same test printed something I would never have looked for:
+
+```
+slider box: w=262 h=3
+```
+
+**The hit target was three pixels tall.** `appearance: none` with a 3px track collapses the element to
+the height of the track, so there was almost nothing to grab — you would press, the thumb would jump,
+and you would slide off it. On a touchscreen it would be hopeless. That is very likely what was
+actually being experienced, underneath the code bug. The input now has a real 22px height with the
+same thin track drawn inside it, and grabbing at 20% or 80% of that height both work.
+
+**Three lessons:**
+
+1. **Never re-render the control you are being driven by.** Any handler that rebuilds its own DOM
+   from inside an `input` event will break dragging. Update readouts in place; rebuild only on
+   structural change.
+2. **Budget work by event frequency.** `input` fires per frame, so anything in that path must cost
+   well under a frame. Cheap feedback immediately, expensive work debounced — not the same function
+   doing both.
+3. **A test that fails can be wrong about *why*, and instrumentation you added for one bug will find
+   another.** I printed the bounding box only to debug my drag simulation, and it handed me the
+   3-pixel hit target — which no amount of reading the JavaScript would have revealed, because the bug
+   was in the CSS.
+
+### When the honest answer is "you cannot have all three"
+
+Setting both ceilings to 45 produced a result worth more than any ranking: **fifteen areas clear 45
+and 45, and not one of them is somewhere you could park.** They are all inner-London permit-free
+developments. Three requirements — 45 minutes each, and keeping a car — are jointly unsatisfiable.
+
+The lazy responses are to show an empty list, or to quietly show the best of a bad set as though it
+were fine. Instead the app now detects the conflict, states it, computes **the smallest change that
+resolves it** — two minutes on one ceiling admits Wanstead; five gives four options — and offers a
+button to apply it.
+
+**Lesson: an optimiser's most valuable output is sometimes "this is infeasible, and here is the
+cheapest constraint to relax."** Users state constraints as though they are independent, because they
+are thinking of them one at a time. Finding out they conflict is genuinely new information, and
+quantifying the cost of each escape route turns a dead end into a decision.
+
 ---
 
 ## Things I chose not to build, and why

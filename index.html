@@ -85,11 +85,17 @@ button{font:inherit; color:inherit; cursor:pointer}
 .ctl label{display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:13.5px; color:var(--ink-2); font-weight:500}
 .ctl .val{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums}
 .ctl .hint{font-size:11.5px; color:var(--ink-4); margin-top:3px; line-height:1.4}
-input[type=range]{-webkit-appearance:none; appearance:none; width:100%; background:transparent; margin:8px 0 0; display:block}
+/* The input needs real height or the hit target is only as tall as the track —
+   3px, which is close to ungrabbable with a mouse and hopeless on a touchscreen.
+   The track stays thin; the element around it does not. */
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; background:transparent;
+  margin:2px 0 0; display:block; height:22px; cursor:pointer; touch-action:none;
+}
 input[type=range]::-webkit-slider-runnable-track{height:3px; background:var(--line); border-radius:2px}
 input[type=range]::-moz-range-track{height:3px; background:var(--line); border-radius:2px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:15px; height:15px; margin-top:-6px; border-radius:50%; background:var(--accent); border:2px solid var(--surface); box-shadow:0 0 0 1px var(--accent)}
-input[type=range]::-moz-range-thumb{width:13px; height:13px; border-radius:50%; background:var(--accent); border:2px solid var(--surface); box-shadow:0 0 0 1px var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:17px; height:17px; margin-top:-7px; border-radius:50%; background:var(--accent); border:2px solid var(--surface); box-shadow:0 0 0 1px var(--accent)}
+input[type=range]::-moz-range-thumb{width:15px; height:15px; border-radius:50%; background:var(--accent); border:2px solid var(--surface); box-shadow:0 0 0 1px var(--accent)}
 .switch{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:13.5px; color:var(--ink-2); font-weight:500; cursor:pointer}
 .switch input{position:absolute; opacity:0; pointer-events:none}
 .track{width:36px; height:20px; border-radius:11px; background:var(--line); position:relative; transition:background .16s; flex:none}
@@ -201,6 +207,12 @@ select{
 .star[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent-line); color:var(--accent)}
 .empty{padding:44px 20px; text-align:center; color:var(--ink-3); background:var(--surface); border:1px dashed var(--line); border-radius:var(--r)}
 .empty h3{font-size:19px; color:var(--ink); margin-bottom:6px}
+
+.conflict{background:var(--warn-soft); border:1px solid var(--warn); border-radius:var(--r); padding:15px 17px; margin-bottom:4px}
+.conflict h3{font-size:17px; font-weight:700; color:var(--warn); margin-bottom:7px}
+.conflict p{margin:0 0 9px; font-size:14px; color:var(--ink-2); line-height:1.55; max-width:74ch}
+.conflict p.alt{margin:10px 0 0; font-size:13px; color:var(--ink-3)}
+.conflict .btn{background:var(--surface); border-color:var(--warn)}
 
 /* ---------- compare ---------- */
 .tablewrap{overflow-x:auto; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
@@ -875,7 +887,7 @@ AREAS.forEach(a => { const r = ONS_RENT[a.boro]; if(r){ a.boroRent = r.avg; a.bo
    ========================================================================== */
 const DEFAULTS = {
   target: 45,        // Tisha's door-to-door ceiling
-  targetB: 60,       // yours — two days a week tolerates more than five does
+  targetB: 45,       // yours — same ceiling, at your request
   twoJobs: true,     // the Wayve role is not confirmed; switch this off to plan without it
   daysA: 2,          // days a week Tisha travels to Aldgate
   daysB: 3,          // days a week you would travel to N7 (your preference; 2 is the requirement)
@@ -1094,6 +1106,48 @@ function routeLine(a, j, spec){
 /* ============================================================================
    6. THE CONSOLE
    ========================================================================== */
+/* Repaint one control's own label without touching the rest of the panel. */
+function updateReadout(el){
+  const ctl = el.closest(".ctl");
+  if(!ctl) return;
+  const val = ctl.querySelector(".val");
+  if(val) val.textContent = fmtCtl(el.id, +el.value, el.dataset.suffix);
+  const pips = ctl.querySelector(".pips");
+  if(pips) pips.innerHTML = [1,2,3,4,5].map(i => '<span class="pip'+(i <= +el.value ? " on" : "")+'"></span>').join("");
+}
+
+/* Rebuilding 65 cards costs about 40 ms, which is more than a frame. Doing that
+   on every "input" event saturates the main thread and the drag stops tracking
+   the pointer — the slider appears to move one step and freeze.
+
+   So the work is split. The counts are cheap (evaluate() is well under a
+   millisecond) and update on the next frame, so numbers move as you drag. The
+   expensive card rebuild is debounced to the trailing edge, and lands a beat
+   after you let go. */
+let renderTimer = null, countsQueued = false;
+function scheduleRender(){
+  if(!countsQueued){
+    countsQueued = true;
+    requestAnimationFrame(() => { countsQueued = false; updateCounts(); });
+  }
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(() => { renderTimer = null; renderAll(); }, 130);
+}
+
+/* The one-line summary above the results, updated without touching the cards. */
+function updateCounts(){
+  const all = evaluate();
+  const shown = all.filter(passes).length;
+  const inside = all.filter(r => r.j.total <= state.target &&
+    (!state.twoJobs || !r.jb || r.jb.total <= state.targetB)).length;
+  const el = document.getElementById("resultCount");
+  if(el) el.textContent = shown + " areas shown · " + inside + " of " + AREAS.length +
+    (state.twoJobs ? " clear both ceilings (" + state.target + " and " + state.targetB + " min)"
+                   : " come in at or under " + state.target + " minutes");
+  const n = document.getElementById("tab-n-explore");
+  if(n) n.textContent = shown;
+}
+
 function renderConsole(){
   const c = document.getElementById("console");
   c.innerHTML =
@@ -1130,15 +1184,32 @@ function renderConsole(){
     '<div class="ctl"><div class="hint">Train colours are the real line colours. Every strip is drawn on the same 0–'+SCALE_MAX+' minute scale, so you can compare two areas without reading a single number.</div></div>'+
   '</div></div>';
 
+  /* Dragging a slider fires "input" continuously. Two things must NOT happen on
+     every one of those events:
+       1. renderConsole(), because it replaces the very element under the
+          pointer — the browser then loses the drag, which is why the slider used
+          to move exactly one step and stop.
+       2. a full renderAll() plus a localStorage write, which is far too much work
+          per frame with 65 cards and two SVG strips each.
+     So the readout updates in place, the heavy render is coalesced onto one
+     animation frame, and the save waits for "change" (the end of the drag). */
   c.querySelectorAll("input[type=range]").forEach(el => {
     el.addEventListener("input", e => {
-      const w = e.target.dataset.weight;
-      if(w) state.weights[w] = +e.target.value; else state[e.target.id] = +e.target.value;
-      save(); renderConsole(); renderAll();
+      const t = e.target, w = t.dataset.weight;
+      if(w) state.weights[w] = +t.value; else state[t.id] = +t.value;
+      updateReadout(t);
+      scheduleRender();
     });
+    el.addEventListener("change", save);
   });
   c.querySelectorAll("input[type=checkbox]").forEach(el => {
-    el.addEventListener("change", e => { state[e.target.id] = e.target.checked; save(); renderAll(); });
+    el.addEventListener("change", e => {
+      state[e.target.id] = e.target.checked;
+      save();
+      /* this one changes which controls exist, so the panel does have to rebuild */
+      if(e.target.id === "twoJobs") renderConsole();
+      renderAll();
+    });
   });
   const rw = document.getElementById("resetW");
   if(rw) rw.onclick = () => { state.weights = JSON.parse(JSON.stringify(DEFAULTS.weights)); save(); renderConsole(); renderAll(); };
@@ -1152,10 +1223,13 @@ function renderConsole(){
     save(); renderConsole(); renderAll();
   };
 }
+function fmtCtl(id, val, suffix){
+  return id === "maxRent" ? money(val) : val + (suffix || "");
+}
+
 function ctlRange(id,label,val,min,max,step,suffix,hint){
-  const shown = id === "maxRent" ? money(val) : val + suffix;
-  return '<div class="ctl"><label for="'+id+'">'+label+'<span class="val">'+shown+'</span></label>'+
-    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
+  return '<div class="ctl"><label for="'+id+'">'+label+'<span class="val">'+fmtCtl(id,val,suffix)+'</span></label>'+
+    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" data-suffix="'+esc(suffix||"")+'">'+
     (hint ? '<div class="hint">'+hint+'</div>' : '')+'</div>';
 }
 function ctlSwitch(id,label,on,hint){
@@ -1280,21 +1354,56 @@ function soldStrip(a){
   '</div>';
 }
 
+/* When the constraints cannot all be satisfied at once, say so, and say exactly
+   how much has to give. A ranked list of things you cannot park at is not an
+   answer to someone who has told you they are keeping the car. */
+function conflictBanner(all){
+  const parkOK = r => effPark(r.a) >= 4;
+  const clears = (r, tA, tB) => r.j.total <= tA && (!state.twoJobs || !r.jb || r.jb.total <= tB);
+  if(all.some(r => parkOK(r) && clears(r, state.target, state.targetB) && r.a.rent <= state.maxRent)) return "";
+
+  /* smallest bump to either ceiling that lets something parkable through */
+  let fix = null;
+  for(let extra = 1; extra <= 25 && !fix; extra++){
+    const hitB = all.filter(r => parkOK(r) && r.a.rent <= state.maxRent && clears(r, state.target, state.targetB + extra));
+    const hitA = all.filter(r => parkOK(r) && r.a.rent <= state.maxRent && clears(r, state.target + extra, state.targetB));
+    if(hitB.length) fix = { who:"targetB", label:"your ceiling", extra, list:hitB };
+    else if(hitA.length) fix = { who:"target", label:"Tisha\u2019s ceiling", extra, list:hitA };
+  }
+  const names = fix ? fix.list.sort((a,b) => a.wk - b.wk).slice(0,4).map(r => r.a.name).join(", ") : "";
+  return '<div class="conflict">'+
+    '<h3>Nothing you can park at clears both ceilings</h3>'+
+    '<p>Every area inside '+state.target+' minutes for Tisha and '+state.targetB+' for you is somewhere a tenancy would not let you '+
+    'keep a car — mostly inner-London permit-free developments. The car and these two limits cannot both hold.</p>'+
+    (fix ? '<p><b>The smallest thing that gives:</b> '+fix.extra+' more minute'+(fix.extra===1?'':'s')+' on '+fix.label+
+      ' (to '+((fix.who==="targetB"?state.targetB:state.target)+fix.extra)+') lets '+fix.list.length+' through — '+esc(names)+'.</p>'+
+      '<button class="btn" id="applyFix">Add '+fix.extra+' min to '+fix.label+'</button>'
+      : '<p>No ceiling within reach fixes it at this rent budget — try raising the rent, or reconsider the car.</p>')+
+    '<p class="alt">The alternative is giving up the car, which opens up the fastest and best-connected areas on the list: '+
+    'Stratford, Forest Gate, Walthamstow Central, Dalston.</p>'+
+  '</div>';
+}
+
 function renderResults(){
   const all = evaluate();
   const rows = sorted(all.filter(passes));
   const host = document.getElementById("results");
+  const banner = conflictBanner(all);
   if(!rows.length){
     host.innerHTML = '<div class="empty"><h3>Nothing clears those constraints</h3>'+
-      '<p>Try raising the rent budget, allowing a longer walk to the station, or turning on “show areas over the limit”.</p></div>';
+      '<p>Try raising the rent budget, allowing a longer walk to the station, or turning on “show areas over the limit”.</p></div>' + banner;
   } else {
-    host.innerHTML = rows.map((r,i) => card(r, i+1)).join("");
+    host.innerHTML = banner + rows.map((r,i) => card(r, i+1)).join("");
     host.querySelectorAll("[data-star]").forEach(b => b.onclick = () => toggleStar(b.dataset.star));
   }
-  const inside = all.filter(r => r.j.total <= state.target).length;
-  document.getElementById("resultCount").textContent =
-    rows.length + " areas shown · " + inside + " of " + AREAS.length + " come in at or under " + state.target + " minutes";
-  document.getElementById("tab-n-explore").textContent = rows.length;
+  const fixBtn = document.getElementById("applyFix");
+  if(fixBtn) fixBtn.onclick = () => {
+    const m = /Add (\d+) min to (.+)/.exec(fixBtn.textContent);
+    if(!m) return;
+    const key = m[2].indexOf("Tisha") === 0 ? "target" : "targetB";
+    state[key] += +m[1]; save(); renderConsole(); renderAll();
+  };
+  updateCounts();
   document.getElementById("tab-n-short").textContent = shortlist.length || "";
 }
 function toggleStar(id){
@@ -2120,29 +2229,26 @@ function renderMethod(){
   '<li>It does not know about schools, which will matter later even if it does not now.</li>'+
   '<li>It does not price specific streets. Two roads either side of the North Circular in South Woodford are very different places.</li>'+
   '<li>It scores one commute only. If a second workplace enters the picture, the honest move is to rerun this with both and score each area on the worse of the two.</li>'+
-  '<li>It stops at 60 minutes. Leigh-on-Sea and St Albans are lovely and neither one gets close.</li>'+
+  '<li>It stops at around an hour for the Aldgate journey. Leigh-on-Sea and St Albans are lovely and neither gets close.</li>'+
   '</ul>'+
 
   '<h3>If you want the short answer</h3>'+
-  '<p><b>It now depends on a question only you can answer</b>, and the two answers are close enough that both are defensible.</p>'+
-  '<p><b>If the commute still leads: Wanstead.</b> 39 minutes for Tisha, 47 for you, evenly split, about £1,900 a month, streets you can '+
-  'park on, Epping Forest at the end of the road. It is the only parkable area that survives the joint frontier, and it tops the default '+
-  'weighting at every ceiling I tried.</p>'+
-  '<p><b>If the neighbourhood leads: Brentwood.</b> Press Hybrid and it overtakes Wanstead. It is 52 and 66 minutes — over both ceilings as '+
-  'they stand — but £1,650 a month, and the only area on this list scoring five out of five for walkability, green space and parking '+
-  'simultaneously. With five commuting days a week between two people, paying thirteen extra minutes on the days you travel to get a better '+
-  'place on the days you do not is a real argument, not a compromise.</p>'+
-  '<p><b>The realistic viewing list,</b> all parkable and inside budget: <b>Wanstead</b> (39/47, £1,900) · <b>Highams Park</b> (44/53, £1,750) · '+
-  '<b>South Woodford</b> (43/51, £1,850) · <b>Romford</b> (44/58, £1,550) · <b>Shenfield</b> (44/60, £1,800).</p>'+
-  '<p><b>The one worth a serious look if you relax the ceiling:</b> <b>Brentwood</b>, at 52 and 66 minutes. Over both limits as they stand — '+
-  'but £1,650, and a five out of five for walkability, green space <em>and</em> parking, which nothing else on this list manages. '+
-  'With five commuting days a week between you, that is a genuinely defensible trade rather than a compromise. '+
-  '<b>Forest Hill</b> (45/61, £1,900) is the same argument on the other side of London.</p>'+
-  '<p><b>If the car were negotiable</b>, <b>Forest Gate</b> (29/43) and <b>Walthamstow Central</b> (36/38) beat everything above on travel time '+
-  'and cost about the same. Keeping the car is now worth roughly an hour a week rather than two — the case for it got weaker along with '+
-  'the commute.</p>'+
-  '<p><b>And if Wayve does not convert</b>, switch off “plan for two commutes”. Upminster returns to the top, because nothing else on this '+
-  'page beats it for a single Aldgate commute. Do not sign a two-year tenancy against the two-commute answer until you have the offer.</p>'+
+  '<div class="callout"><p><b>With both ceilings at 45 minutes and the car, there is no answer.</b> Fifteen areas clear 45 and 45. '+
+  'Every single one of them is somewhere a tenancy will not let you park — Stratford, Mile End, Dalston, Bethnal Green, Hackney Wick and so on, '+
+  'almost all inner-London permit-free developments. That is not a gap in the data; it is a genuine conflict between three things you have '+
+  'asked for at once.</p></div>'+
+  '<p><b>Two minutes fixes it.</b> Move your ceiling from 45 to <b>47</b> and <b>Wanstead</b> comes in — 39 minutes for Tisha, 47 for you, '+
+  'about £1,900, parkable, Epping Forest at the end of the road. That is the whole cost of keeping the car: two minutes, twice a week, '+
+  'on your journey only. There is a button on the Explore tab that applies it.</p>'+
+  '<p><b>Five minutes gives you a choice.</b> At 45/50 there are four: <b>Wanstead</b> (39/47, £1,900), <b>Wood Street</b> (40/49, £1,700), '+
+  '<b>Snaresbrook</b> (41/49, £1,900) and <b>Redbridge</b> (42/50, £1,700). At 45/55 there are ten, and Highams Park and South Woodford join. '+
+  'Given you are each in the office two or three days a week, that is a very cheap way to buy a real shortlist.</p>'+
+  '<p><b>Or drop the car.</b> Then the answer is immediate and good: <b>Stratford</b> (26/36), <b>Forest Gate</b> (29/43), '+
+  '<b>Walthamstow Central</b> (36/38) and <b>Dalston</b> (34/30) all clear 45/45 with room to spare, and cost between 5.3 and 6.2 hours a week '+
+  'of travel between you against Wanstead\u2019s 7.3. That is the trade, stated plainly: the car costs you roughly ninety minutes a week and '+
+  'most of the shortlist.</p>'+
+  '<p><b>And if Wayve does not convert</b>, switch off “plan for two commutes”: Upminster returns to the top, and the conflict disappears '+
+  'entirely, because one commute to Aldgate is an easy problem and two commutes to opposite sides of London is not.</p>'+
   '</div>';
 }
 
